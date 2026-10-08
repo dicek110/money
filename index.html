@@ -9,23 +9,30 @@
 <body class="bg-gray-50 text-gray-800 p-4 pb-12 text-xs">
     <header class="mb-4 text-center">
         <h1 class="text-xl font-extrabold text-slate-900">🔥 FIRE Dashboard</h1>
+        <p class="text-[10px] text-gray-400 mt-1">つまみを動かすとリアルタイムに再計算します</p>
     </header>
-    <!-- コントロール -->
+
+    <!-- コントロール（スライダー） -->
     <div class="bg-white p-3 rounded-xl border border-gray-100 mb-4 grid grid-cols-2 gap-3 font-bold text-gray-700">
-        <div>運用資産: <span id="vInv" class="text-emerald-600">13000</span>万<input type="range" id="iInv" min="5000" max="30000" step="500" value="13000" class="w-full h-1 bg-gray-200 rounded"></div>
-        <div>現金保有: <span id="vCash" class="text-slate-600">3000</span>万<input type="range" id="iCash" min="0" max="10000" step="500" value="3000" class="w-full h-1 bg-gray-200 rounded"></div>
-        <div>運用利回り: <span id="vYld" class="text-blue-600">4.0</span>%<input type="range" id="iYld" min="0" max="10" step="0.5" value="4.0" class="w-full h-1 bg-gray-200 rounded"></div>
-        <div>インフレ率: <span id="vInf" class="text-red-500">2.0</span>%<input type="range" id="iInf" min="0" max="5" step="0.5" value="2.0" class="w-full h-1 bg-gray-200 rounded"></div>
+        <div>運用資産: <span id="vInv" class="text-emerald-600">13,000</span>万<input type="range" id="iInv" min="5000" max="30000" step="500" value="13000" class="w-full h-1 bg-gray-200 rounded" oninput="sim()"></div>
+        <div>現金保有: <span id="vCash" class="text-slate-600">3,000</span>万<input type="range" id="iCash" min="0" max="10000" step="500" value="3000" class="w-full h-1 bg-gray-200 rounded" oninput="sim()"></div>
+        <div>運用利回り: <span id="vYld" class="text-blue-600">4.0</span>%<input type="range" id="iYld" min="0" max="10" step="0.5" value="4.0" class="w-full h-1 bg-gray-200 rounded" oninput="sim()"></div>
+        <div>インフレ率: <span id="vInf" class="text-red-500">2.0</span>%<input type="range" id="iInf" min="0" max="5" step="0.5" value="2.0" class="w-full h-1 bg-gray-200 rounded" oninput="sim()"></div>
     </div>
-    <!-- 要約 -->
+
+    <!-- 要約数値 -->
     <div class="grid grid-cols-4 gap-2 mb-4 font-bold text-center">
-        <div class="bg-white p-2 rounded border border-gray-100"><p class="text-gray-400">60歳</p><span id="s60">-</span></div>
-        <div class="bg-white p-2 rounded border border-gray-100"><p class="text-gray-400">70歳</p><span id="s70">-</span></div>
-        <div class="bg-white p-2 rounded border border-gray-100"><p class="text-gray-400">90歳</p><span id="s90">-</span></div>
-        <div id="rCard" class="p-2 rounded border"><p class="text-gray-400">枯渇</p><span id="sRisk">-</span></div>
+        <div class="bg-white p-2 rounded border border-gray-100"><p class="text-[10px] text-gray-400">60歳総資産</p><span id="s60">-</span></div>
+        <div class="bg-white p-2 rounded border border-gray-100"><p class="text-[10px] text-gray-400">70歳総資産</p><span id="s70">-</span></div>
+        <div class="bg-white p-2 rounded border border-gray-100"><p class="text-[10px] text-gray-400">90歳総資産</p><span id="s90">-</span></div>
+        <div id="rCard" class="p-2 rounded border border-gray-200 bg-white"><p class="text-[10px] text-gray-400">枯渇リスク</p><span id="sRisk">-</span></div>
     </div>
+
     <!-- グラフ -->
-    <div class="bg-white p-3 rounded-xl border border-gray-100 mb-4 h-[260px] relative"><canvas id="fChart"></canvas></div>
+    <div class="bg-white p-3 rounded-xl border border-gray-100 mb-4 h-[260px] relative">
+        <canvas id="fChart"></canvas>
+    </div>
+
     <!-- テーブル -->
     <div class="bg-white rounded-xl border border-gray-100 overflow-hidden">
         <div class="overflow-x-auto max-h-[300px]">
@@ -37,19 +44,35 @@
             </table>
         </div>
     </div>
+
     <script>
-        const ids = ['iInv','iCash','iYld','iInf','vInv','vCash','vYld','vInf','s60','s70','s90','sRisk','rCard','tBody'];
-        const dom = {}; ids.forEach(id => dom[id] = document.getElementById(id));
         let chart = null;
         function sim() {
+            const dom = {
+                iInv: document.getElementById('iInv'), iCash: document.getElementById('iCash'),
+                iYld: document.getElementById('iYld'), iInf: document.getElementById('iInf'),
+                vInv: document.getElementById('vInv'), vCash: document.getElementById('vCash'),
+                vYld: document.getElementById('vYld'), vInf: document.getElementById('vInf'),
+                s60: document.getElementById('s60'), s70: document.getElementById('s70'),
+                s90: document.getElementById('s90'), sRisk: document.getElementById('sRisk'),
+                rCard: document.getElementById('rCard'), tBody: document.getElementById('tBody')
+            };
+            if (!dom.iInv || !dom.iCash || !dom.iYld || !dom.iInf) return;
+
             const initInv = parseFloat(dom.iInv.value), initCash = parseFloat(dom.iCash.value);
             const yld = parseFloat(dom.iYld.value)/100, inf = parseFloat(dom.iInf.value)/100;
-            dom.vInv.textContent = initInv.toLocaleString(); dom.vCash.textContent = initCash.toLocaleString();
-            dom.vYld.textContent = (yld*100).toFixed(1); dom.vInf.textContent = (inf*100).toFixed(1);
+
+            dom.vInv.textContent = initInv.toLocaleString(); 
+            dom.vCash.textContent = initCash.toLocaleString();
+            dom.vYld.textContent = (yld*100).toFixed(1); 
+            dom.vInf.textContent = (inf*100).toFixed(1);
+
             let cInv = initInv, cCash = initCash, rAge = null, t60=0, t70=0, t90=0;
-            const lbls = [], dInv = [], dCash = [], dTot = []; dom.tBody.innerHTML = '';
+            const lbls = [], dInv = [], dCash = [], dTot = []; 
+            dom.tBody.innerHTML = '';
+
             for (let a = 44; a <= 90; a++) {
-                cInv = (a > 44) ? cInv * (1 + yld) : cInv * (1 + yld);
+                if (a > 44) cInv = cInv * (1 + yld);
                 let cost = ((a <= 59) ? 500 : 400) * Math.pow(1 + inf, a - 44);
                 let pen = (a >= 60) ? 100 * Math.pow(1 + inf, a - 60) : 0;
                 let def = cost - pen;
@@ -59,20 +82,30 @@
                 if (a === 60) t60 = tot; if (a === 70) t70 = tot; if (a === 90) t90 = tot;
                 lbls.push(a+'歳'); dInv.push(Math.round(cInv)); dCash.push(Math.round(cCash)); dTot.push(Math.round(tot));
                 const row = document.createElement('tr'); row.className = a % 2 === 0 ? 'bg-gray-50/50' : 'bg-white';
-                row.innerHTML = `<td class="p-2 font-bold text-gray-900">${a}歳</td><td class="p-2 text-red-500">-${Math.round(cost)}</td><td class="p-2 text-emerald-600">+${Math.round(pen)}</td><td class="p-2">${Math.round(cInv)}</td><td class="p-2">${Math.round(cCash)}</td><td class="p-2 text-right font-bold">${Math.round(tot)}</td>`;
+                row.innerHTML = `<td class="p-2 font-bold text-gray-900">${a}歳</td><td class="p-2 text-red-500">-${Math.round(cost).toLocaleString()}</td><td class="p-2 text-emerald-600">+${Math.round(pen).toLocaleString()}</td><td class="p-2">${Math.round(cInv).toLocaleString()}</td><td class="p-2">${Math.round(cCash).toLocaleString()}</td><td class="p-2 text-right font-bold">${Math.round(tot).toLocaleString()}</td>`;
                 dom.tBody.appendChild(row);
             }
-            dom.s60.textContent = Math.round(t60)+"万"; dom.s70.textContent = Math.round(t70)+"万"; dom.s90.textContent = Math.round(t90)+"万";
-            if (rAge !== null) { dom.sRisk.textContent = rAge+"歳"; dom.rCard.className = "bg-red-50 border-red-200 text-red-700"; }
-            else { dom.sRisk.textContent = "なし"; dom.rCard.className = "bg-emerald-50 border-emerald-200 text-emerald-700"; }
+
+            dom.s60.textContent = Math.round(t60).toLocaleString()+"万"; 
+            dom.s70.textContent = Math.round(t70).toLocaleString()+"万"; 
+            dom.s90.textContent = Math.round(t90).toLocaleString()+"万";
+
+            if (rAge !== null) { dom.sRisk.textContent = rAge+"歳枯渇"; dom.rCard.className = "p-2 rounded border bg-red-50 border-red-200 text-red-700 font-bold"; }
+            else { dom.sRisk.textContent = "なし"; dom.rCard.className = "p-2 rounded border bg-emerald-50 border-emerald-200 text-emerald-700 font-bold"; }
+
             if (chart) chart.destroy();
-            chart = new Chart(document.getElementById('fChart').getContext('2d'), {
-                type: 'line', data: { labels: lbls, datasets: [{ label: '総資産', data: dTot, borderColor: '#0284c7', backgroundColor: 'rgba(2, 132, 199, 0.05)', fill: true, borderWidth: 2 }, { label: '運用', data: dInv, borderColor: '#10b981', fill: false, borderWidth: 1 }, { label: '現金', data: dCash, borderColor: '#94a3b8', fill: false, borderWidth: 1 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { boxWidth: 8, font: { size: 9 } } } }, scales: { y: { beginAtZero: true, ticks: { font: { size: 8 } } }, x: { ticks: { font: { size: 8 } } } } }
-            });
+            const ctx = document.getElementById('fChart');
+            if (ctx) {
+                chart = new Chart(ctx.getContext('2d'), {
+                    type: 'line', data: { labels: lbls, datasets: [{ label: '総資産', data: dTot, borderColor: '#0284c7', backgroundColor: 'rgba(2, 132, 199, 0.05)', fill: true, borderWidth: 2, pointRadius: 1 }, { label: '運用', data: dInv, borderColor: '#10b981', fill: false, borderWidth: 1, pointRadius: 0 }, { label: '現金', data: dCash, borderColor: '#94a3b8', fill: false, borderWidth: 1, pointRadius: 0 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { boxWidth: 8, font: { size: 9 } } } }, scales: { y: { beginAtZero: true, ticks: { font: { size: 8 } } }, x: { ticks: { font: { size: 8 }, maxRotation: 0 } } } }
+                });
+            }
         }
-        ['iInv','iCash','iYld','iInf'].forEach(id => document.getElementById(id).addEventListener('input', sim));
-        sim();
+        // ページ読み込み完了時、および予備で即時実行
+        window.addEventListener('load', sim);
+        document.addEventListener('DOMContentLoaded', sim);
+        setTimeout(sim, 500);
     </script>
 </body>
 </html>
