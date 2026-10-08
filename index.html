@@ -1,237 +1,78 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FIREシミュレーション</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIRE</title>
+    <script src="https://jsdelivr.net"></script>
+    <script src="https://jsdelivr.net"></script>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans antialiased pb-12">
-
-    <div class="max-w-6xl mx-auto px-4 py-6">
-        <!-- ヘッダー -->
-        <header class="mb-6 text-center">
-            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">🔥 FIRE Dashboard</h1>
-            <p class="text-xs text-gray-500 mt-1">数値を動かしてリアルタイムシミュレーション</p>
-        </header>
-
-        <!-- コントロールパネル -->
-        <div class="bg-white p-4 rounded-xl shadow-xs border border-gray-100 mb-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div>
-                <label class="block font-bold text-gray-700 mb-1">運用資産: <span id="valInvest" class="text-emerald-600">13,000</span>万円</label>
-                <input type="range" id="inputInvest" min="5000" max="30000" step="500" value="13000" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-            </div>
-            <div>
-                <label class="block font-bold text-gray-700 mb-1">現金保有: <span id="valCash" class="text-slate-600">3,000</span>万円</label>
-                <input type="range" id="inputCash" min="0" max="10000" step="500" value="3000" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-            </div>
-            <div>
-                <label class="block font-bold text-gray-700 mb-1">運用利回り: <span id="valYield" class="text-blue-600">4.0</span>%</label>
-                <input type="range" id="inputYield" min="0" max="10" step="0.5" value="4.0" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-            </div>
-            <div>
-                <label class="block font-bold text-gray-700 mb-1">インフレ率: <span id="valInflation" class="text-red-500">2.0</span>%</label>
-                <input type="range" id="inputInflation" min="0" max="5" step="0.5" value="2.0" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-            </div>
-        </div>
-
-        <!-- 要約数値 -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 text-xs">
-            <div class="bg-white p-3 rounded-lg shadow-xs border border-gray-100 text-center">
-                <span class="text-gray-400 block mb-1">60歳総資産</span>
-                <span id="summary60" class="text-sm font-bold text-slate-800">-</span>
-            </div>
-            <div class="bg-white p-3 rounded-lg shadow-xs border border-gray-100 text-center">
-                <span class="text-gray-400 block mb-1">70歳総資産</span>
-                <span id="summary70" class="text-sm font-bold text-slate-800">-</span>
-            </div>
-            <div class="bg-white p-3 rounded-lg shadow-xs border border-gray-100 text-center">
-                <span class="text-gray-400 block mb-1">90歳総資産</span>
-                <span id="summary90" class="text-sm font-bold text-slate-800">-</span>
-            </div>
-            <div class="p-3 rounded-lg shadow-xs border text-center" id="riskCard">
-                <span class="text-gray-400 block mb-1">資産枯渇リスク</span>
-                <span id="summaryRisk" class="text-sm font-bold">-</span>
-            </div>
-        </div>
-
-        <!-- グラフ -->
-        <div class="bg-white p-4 rounded-xl shadow-xs border border-gray-100 mb-6">
-            <h2 class="text-sm font-bold text-gray-800 mb-2">📈 資産推移チャート</h2>
-            <div class="relative w-full h-[300px]">
-                <canvas id="fireChart"></canvas>
-            </div>
-        </div>
-
-        <!-- テーブル -->
-        <div class="bg-white rounded-xl shadow-xs border border-gray-100 overflow-hidden">
-            <div class="px-4 py-3 border-b border-gray-100">
-                <h2 class="text-sm font-bold text-gray-800">📊 年齢別データ（万円）</h2>
-            </div>
-            <div class="overflow-x-auto max-h-[400px]">
-                <table class="w-full text-left border-collapse text-xs whitespace-nowrap">
-                    <thead class="bg-gray-50 text-gray-500 font-semibold sticky top-0 border-b border-gray-100 z-10">
-                        <tr>
-                            <th class="p-2 pl-4">年齢</th>
-                            <th class="p-2">生活費</th>
-                            <th class="p-2">年金</th>
-                            <th class="p-2">運用資産</th>
-                            <th class="p-2">現金</th>
-                            <th class="p-2 pr-4 text-right">総資産</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody" class="divide-y divide-gray-100 text-gray-600">
-                        <!-- 動的挿入 -->
-                    </tbody>
-                </table>
-            </div>
+<body class="bg-gray-50 text-gray-800 p-4 pb-12 text-xs">
+    <header class="mb-4 text-center">
+        <h1 class="text-xl font-extrabold text-slate-900">🔥 FIRE Dashboard</h1>
+    </header>
+    <!-- コントロール -->
+    <div class="bg-white p-3 rounded-xl border border-gray-100 mb-4 grid grid-cols-2 gap-3 font-bold text-gray-700">
+        <div>運用資産: <span id="vInv" class="text-emerald-600">13000</span>万<input type="range" id="iInv" min="5000" max="30000" step="500" value="13000" class="w-full h-1 bg-gray-200 rounded"></div>
+        <div>現金保有: <span id="vCash" class="text-slate-600">3000</span>万<input type="range" id="iCash" min="0" max="10000" step="500" value="3000" class="w-full h-1 bg-gray-200 rounded"></div>
+        <div>運用利回り: <span id="vYld" class="text-blue-600">4.0</span>%<input type="range" id="iYld" min="0" max="10" step="0.5" value="4.0" class="w-full h-1 bg-gray-200 rounded"></div>
+        <div>インフレ率: <span id="vInf" class="text-red-500">2.0</span>%<input type="range" id="iInf" min="0" max="5" step="0.5" value="2.0" class="w-full h-1 bg-gray-200 rounded"></div>
+    </div>
+    <!-- 要約 -->
+    <div class="grid grid-cols-4 gap-2 mb-4 font-bold text-center">
+        <div class="bg-white p-2 rounded border border-gray-100"><p class="text-gray-400">60歳</p><span id="s60">-</span></div>
+        <div class="bg-white p-2 rounded border border-gray-100"><p class="text-gray-400">70歳</p><span id="s70">-</span></div>
+        <div class="bg-white p-2 rounded border border-gray-100"><p class="text-gray-400">90歳</p><span id="s90">-</span></div>
+        <div id="rCard" class="p-2 rounded border"><p class="text-gray-400">枯渇</p><span id="sRisk">-</span></div>
+    </div>
+    <!-- グラフ -->
+    <div class="bg-white p-3 rounded-xl border border-gray-100 mb-4 h-[260px] relative"><canvas id="fChart"></canvas></div>
+    <!-- テーブル -->
+    <div class="bg-white rounded-xl border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto max-h-[300px]">
+            <table class="w-full text-left border-collapse whitespace-nowrap">
+                <thead class="bg-gray-50 text-gray-500 font-bold sticky top-0 border-b border-gray-100">
+                    <tr><th class="p-2">年齢</th><th class="p-2">生活費</th><th class="p-2">年金</th><th class="p-2">運用資産</th><th class="p-2">現金</th><th class="p-2 text-right">総資産</th></tr>
+                </thead>
+                <tbody id="tBody" class="divide-y divide-gray-100 text-gray-600"></tbody>
+            </table>
         </div>
     </div>
-
     <script>
-        const inputInvest = document.getElementById('inputInvest');
-        const inputCash = document.getElementById('inputCash');
-        const inputYield = document.getElementById('inputYield');
-        const inputInflation = document.getElementById('inputInflation');
-
-        const valInvest = document.getElementById('valInvest');
-        const valCash = document.getElementById('valCash');
-        const valYield = document.getElementById('valYield');
-        const valInflation = document.getElementById('valInflation');
-
-        const summary60 = document.getElementById('summary60');
-        const summary70 = document.getElementById('summary70');
-        const summary90 = document.getElementById('summary90');
-        const summaryRisk = document.getElementById('summaryRisk');
-        const riskCard = document.getElementById('riskCard');
-        const tableBody = document.getElementById('tableBody');
-
-        let fireChartInstance = null;
-
-        function runSimulation() {
-            const initialInvest = parseFloat(inputInvest.value);
-            const initialCash = parseFloat(inputCash.value);
-            const yieldRate = parseFloat(inputYield.value) / 100;
-            const inflationRate = parseFloat(inputInflation.value) / 100;
-
-            valInvest.textContent = initialInvest.toLocaleString();
-            valCash.textContent = initialCash.toLocaleString();
-            valYield.textContent = (yieldRate * 100).toFixed(1);
-            valInflation.textContent = (inflationRate * 100).toFixed(1);
-
-            let currentInvest = initialInvest;
-            let currentCash = initialCash;
-
-            const startAge = 44;
-            const endAge = 90;
-
-            const labels = [];
-            const investData = [];
-            const cashData = [];
-            const totalData = [];
-
-            tableBody.innerHTML = '';
-            let riskAge = null;
-            let total60 = 0, total70 = 0, total90 = 0;
-
-            for (let age = startAge; age <= endAge; age++) {
-                if (age > startAge) {
-                    currentInvest = currentInvest * (1 + yieldRate);
-                } else {
-                    currentInvest = currentInvest * (1 + yieldRate);
-                }
-
-                let baseCost = (age <= 59) ? 500 : 400;
-                let cost = baseCost * Math.pow(1 + inflationRate, age - startAge);
-
-                let pension = 0;
-                if (age >= 60) {
-                    pension = 100 * Math.pow(1 + inflationRate, age - 60);
-                }
-
-                let deficit = cost - pension;
-                if (deficit > 0) {
-                    if (currentInvest >= deficit) {
-                        currentInvest -= deficit;
-                    } else {
-                        let remainDeficit = deficit - currentInvest;
-                        currentInvest = 0;
-                        currentCash = Math.max(0, currentCash - remainDeficit);
-                    }
-                }
-
-                let totalAssets = currentInvest + currentCash;
-
-                if (totalAssets <= 0 && riskAge === null) {
-                    riskAge = age;
-                }
-
-                if (age === 60) total60 = totalAssets;
-                if (age === 70) total70 = totalAssets;
-                if (age === 90) total90 = totalAssets;
-
-                labels.push(age + '歳');
-                investData.push(Math.round(currentInvest));
-                cashData.push(Math.round(currentCash));
-                totalData.push(Math.round(totalAssets));
-
-                const row = document.createElement('tr');
-                row.className = age % 2 === 0 ? 'bg-gray-50/50' : 'bg-white';
-                row.innerHTML = `
-                    <td class="p-2 pl-4 font-bold text-gray-900">` + age + `歳</td>
-                    <td class="p-2 text-red-500">-` + Math.round(cost).toLocaleString() + `</td>
-                    <td class="p-2 text-emerald-600">+` + Math.round(pension).toLocaleString() + `</td>
-                    <td class="p-2">` + Math.round(currentInvest).toLocaleString() + `</td>
-                    <td class="p-2">` + Math.round(currentCash).toLocaleString() + `</td>
-                    <td class="p-2 pr-4 text-right font-bold ` + (totalAssets > 0 ? 'text-slate-900' : 'text-red-600') + `">` + Math.round(totalAssets).toLocaleString() + `</td>
-                `;
-                tableBody.appendChild(row);
+        const ids = ['iInv','iCash','iYld','iInf','vInv','vCash','vYld','vInf','s60','s70','s90','sRisk','rCard','tBody'];
+        const dom = {}; ids.forEach(id => dom[id] = document.getElementById(id));
+        let chart = null;
+        function sim() {
+            const initInv = parseFloat(dom.iInv.value), initCash = parseFloat(dom.iCash.value);
+            const yld = parseFloat(dom.iYld.value)/100, inf = parseFloat(dom.iInf.value)/100;
+            dom.vInv.textContent = initInv.toLocaleString(); dom.vCash.textContent = initCash.toLocaleString();
+            dom.vYld.textContent = (yld*100).toFixed(1); dom.vInf.textContent = (inf*100).toFixed(1);
+            let cInv = initInv, cCash = initCash, rAge = null, t60=0, t70=0, t90=0;
+            const lbls = [], dInv = [], dCash = [], dTot = []; dom.tBody.innerHTML = '';
+            for (let a = 44; a <= 90; a++) {
+                cInv = (a > 44) ? cInv * (1 + yld) : cInv * (1 + yld);
+                let cost = ((a <= 59) ? 500 : 400) * Math.pow(1 + inf, a - 44);
+                let pen = (a >= 60) ? 100 * Math.pow(1 + inf, a - 60) : 0;
+                let def = cost - pen;
+                if (def > 0) { if (cInv >= def) { cInv -= def; } else { cCash = Math.max(0, cCash - (def - cInv)); cInv = 0; } }
+                let tot = cInv + cCash;
+                if (tot <= 0 && rAge === null) rAge = a;
+                if (a === 60) t60 = tot; if (a === 70) t70 = tot; if (a === 90) t90 = tot;
+                lbls.push(a+'歳'); dInv.push(Math.round(cInv)); dCash.push(Math.round(cCash)); dTot.push(Math.round(tot));
+                const row = document.createElement('tr'); row.className = a % 2 === 0 ? 'bg-gray-50/50' : 'bg-white';
+                row.innerHTML = `<td class="p-2 font-bold text-gray-900">${a}歳</td><td class="p-2 text-red-500">-${Math.round(cost)}</td><td class="p-2 text-emerald-600">+${Math.round(pen)}</td><td class="p-2">${Math.round(cInv)}</td><td class="p-2">${Math.round(cCash)}</td><td class="p-2 text-right font-bold">${Math.round(tot)}</td>`;
+                dom.tBody.appendChild(row);
             }
-
-            summary60.textContent = Math.round(total60).toLocaleString() + " 万";
-            summary70.textContent = Math.round(total70).toLocaleString() + " 万";
-            summary90.textContent = Math.round(total90).toLocaleString() + " 万";
-            
-            if (riskAge !== null) {
-                summaryRisk.textContent = riskAge + "歳で枯渇";
-                summaryRisk.className = "text-sm font-bold text-red-700";
-                riskCard.className = "bg-red-50 p-3 rounded-lg shadow-xs border border-red-200 text-center";
-} else {
-summaryRisk.textContent = "なし (安全)";
-summaryRisk.className = "text-sm font-bold text-emerald-700";
-riskCard.className = "bg-emerald-50 p-3 rounded-lg shadow-xs border border-emerald-200 text-center";
-}
-if (fireChartInstance) {
-fireChartInstance.destroy();
-}
-const ctx = document.getElementById('fireChart').getContext('2d');
-fireChartInstance = new Chart(ctx, {
-type: 'line',
-data: {
-labels: labels,
-datasets: [
-{ label: '総資産', data: totalData, borderColor: '#0284c7', backgroundColor: 'rgba(2, 132, 199, 0.05)', fill: true, tension: 0.1, borderWidth: 2 },
-{ label: '運用', data: investData, borderColor: '#10b981', fill: false, tension: 0.1, borderWidth: 1.5 },
-{ label: '現金', data: cashData, borderColor: '#94a3b8', fill: false, tension: 0.1, borderWidth: 1.5 }
-]
-},
-options: {
-responsive: true,
-maintainAspectRatio: false,
-plugins: {
-legend: { position: 'top', labels: { boxWidth: 12, font: { size: 10 } } }
-},
-scales: {
-y: { beginAtZero: true, ticks: { font: { size: 9 }, callback: function(value) { return value.toLocaleString() + '万'; } } },
-x: { ticks: { font: { size: 9 }, maxRotation: 45 } }
-}
-}
-});
-}
-[inputInvest, inputCash, inputYield, inputInflation].forEach(input => {
-input.addEventListener('input', runSimulation);
-});
-runSimulation();
+            dom.s60.textContent = Math.round(t60)+"万"; dom.s70.textContent = Math.round(t70)+"万"; dom.s90.textContent = Math.round(t90)+"万";
+            if (rAge !== null) { dom.sRisk.textContent = rAge+"歳"; dom.rCard.className = "bg-red-50 border-red-200 text-red-700"; }
+            else { dom.sRisk.textContent = "なし"; dom.rCard.className = "bg-emerald-50 border-emerald-200 text-emerald-700"; }
+            if (chart) chart.destroy();
+            chart = new Chart(document.getElementById('fChart').getContext('2d'), {
+                type: 'line', data: { labels: lbls, datasets: [{ label: '総資産', data: dTot, borderColor: '#0284c7', backgroundColor: 'rgba(2, 132, 199, 0.05)', fill: true, borderWidth: 2 }, { label: '運用', data: dInv, borderColor: '#10b981', fill: false, borderWidth: 1 }, { label: '現金', data: dCash, borderColor: '#94a3b8', fill: false, borderWidth: 1 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { boxWidth: 8, font: { size: 9 } } } }, scales: { y: { beginAtZero: true, ticks: { font: { size: 8 } } }, x: { ticks: { font: { size: 8 } } } } }
+            });
+        }
+        ['iInv','iCash','iYld','iInf'].forEach(id => document.getElementById(id).addEventListener('input', sim));
+        sim();
+    </script>
+</body>
+</html>
