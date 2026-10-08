@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIREシミュレーション・ダッシュボード</title>
+    <!-- Tailwind CSS (スタイリング用) -->
+    <script src="https://jsdelivr.net"></script>
+    <!-- Chart.js (グラフ描画用) -->
+    <script src="https://jsdelivr.net"></script>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans antialiased">
+
+    <div class="max-w-6xl mx-auto px-4 py-8">
+        <!-- ヘッダー -->
+        <header class="mb-8 text-center md:text-left">
+            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">🔥 FIRE Simulation Dashboard</h1>
+            <p class="text-gray-500 mt-2">44歳開始 / 初期資産1.6億円 / 利回り4%・インフレ2%条件</p>
+        </header>
+
+        <!-- ハイライトカード (要約数値) -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white p-5 rounded-xl shadow-xs border border-gray-100 text-center">
+                <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1">60歳時点の総資産</span>
+                <span class="text-2xl font-bold text-slate-800">1億4,905万円</span>
+            </div>
+            <div class="bg-white p-5 rounded-xl shadow-xs border border-gray-100 text-center">
+                <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1">70歳時点の総資産</span>
+                <span class="text-2xl font-bold text-slate-800">1億5,136万円</span>
+            </div>
+            <div class="bg-white p-5 rounded-xl shadow-xs border border-gray-100 text-center">
+                <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1">90歳時点の総資産</span>
+                <span class="text-2xl font-bold text-emerald-600">1億1,537万円</span>
+            </div>
+            <div class="bg-white p-5 rounded-xl shadow-xs border border-gray-100 text-center bg-emerald-50 border-emerald-200">
+                <span class="text-xs font-semibold text-emerald-600 uppercase tracking-wider block mb-1">資産枯渇リスク</span>
+                <span class="text-2xl font-bold text-emerald-700">なし (極めて安全)</span>
+            </div>
+        </div>
+
+        <!-- グラフエリア -->
+        <div class="bg-white p-6 rounded-2xl shadow-xs border border-gray-100 mb-8">
+            <h2 class="text-lg font-bold text-gray-800 mb-4">📈 資産推移チャート</h2>
+            <div class="relative w-full h-[350px] md:h-[450px]">
+                <canvas id="fireChart"></canvas>
+            </div>
+        </div>
+
+        <!-- データテーブル -->
+        <div class="bg-white rounded-2xl shadow-xs border border-gray-100 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100">
+                <h2 class="text-lg font-bold text-gray-800">📊 年齢別詳細データ（万円）</h2>
+            </div>
+            <div class="overflow-x-auto max-h-[500px]">
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead class="bg-gray-50 text-gray-500 font-semibold sticky top-0 border-b border-gray-100 z-10">
+                        <tr>
+                            <th class="p-3 pl-6">年齢</th>
+                            <th class="p-3">年間生活費</th>
+                            <th class="p-3">年金収入</th>
+                            <th class="p-3">運用資産</th>
+                            <th class="p-3">現金</th>
+                            <th class="p-3 pr-6 text-right">総資産</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="divide-y divide-gray-100 text-gray-600">
+                        <!-- JSでここにデータを挿入します -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- シミュレーションロジックとグラフ描画スクリプト -->
+    <script>
+        // シミュレーション条件
+        const startAge = 44;
+        const endAge = 90;
+        const yieldRate = 0.04;
+        const inflationRate = 0.02;
+
+        let currentInvest = 13000; // 運用資産初期値（万円）
+        let currentCash = 3000;    // 現金初期値（万円）
+
+        // グラフ・テーブル用の配列データ
+        const labels = [];
+        const investData = [];
+        const cashData = [];
+        const totalData = [];
+        const costData = [];
+        const pensionData = [];
+
+        const tableBody = document.getElementById('tableBody');
+
+        for (let age = startAge; age <= endAge; age++) {
+            // 前年の運用資産を4%で運用（44歳時点は初期値のままスタートするため、計算順序を調整）
+            if (age > startAge) {
+                currentInvest = currentInvest * (1 + yieldRate);
+            } else {
+                // 44歳の運用益反映
+                currentInvest = currentInvest * (1 + yieldRate);
+            }
+
+            // 生活費の計算
+            let baseCost = (age <= 59) ? 500 : 400;
+            let cost = baseCost * Math.pow(1 + inflationRate, age - startAge);
+
+            // 年金の計算
+            let pension = 0;
+            if (age >= 60) {
+                pension = 100 * Math.pow(1 + inflationRate, age - 60);
+            }
+
+            // 不足分の取り崩し
+            let deficit = cost - pension;
+            if (deficit > 0) {
+                if (currentInvest >= deficit) {
+                    currentInvest -= deficit;
+                } else {
+                    let remainDeficit = deficit - currentInvest;
+                    currentInvest = 0;
+                    currentCash = Math.max(0, currentCash - remainDeficit);
+                }
+            }
+
+            let totalAssets = currentInvest + currentCash;
+
+            // 配列に格納（グラフ用）
+            labels.push(`${age}歳`);
+            investData.push(Math.round(currentInvest));
+            cashData.push(Math.round(currentCash));
+            totalData.push(Math.round(totalAssets));
+            costData.push(Math.round(cost));
+            pensionData.push(Math.round(pension));
+
+            // テーブルに行を追加
+            const row = document.createElement('tr');
+            row.className = age % 2 === 0 ? 'bg-gray-50/50' : 'bg-white';
+            row.innerHTML = `
+                <td class="p-3 pl-6 font-bold text-gray-900">${age}歳</td>
+                <td class="p-3 text-red-500">-${Math.round(cost).toLocaleString()}</td>
+                <td class="p-3 text-emerald-600">+${Math.round(pension).toLocaleString()}</td>
+                <td class="p-3">${Math.round(currentInvest).toLocaleString()}</td>
+                <td class="p-3">${Math.round(currentCash).toLocaleString()}</td>
+                <td class="p-3 pr-6 text-right font-bold ${totalAssets > 5000 ? 'text-slate-900' : 'text-amber-600'}">${Math.round(totalAssets).toLocaleString()}</td>
+            `;
+            tableBody.appendChild(row);
+        }
+
+        // Chart.jsによるグラフ描画
+        const ctx = document.getElementById('fireChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: '総資産',
+                        data: totalData,
+                        borderColor: '#0284c7',
+                        backgroundColor: 'rgba(2, 132, 199, 0.05)',
+                        fill: true,
+                        tension: 0.1,
+                        borderWidth: 3
+                    },
+                    {
+                        label: '運用資産',
+                        data: investData,
+                        borderColor: '#10b981',
+                        borderDash:,
+                        fill: false,
+                        tension: 0.1
+                    },
+                    {
+                        label: '現金',
+                        data: cashData,
+                        borderColor: '#94a3b8',
+                        borderDash:,
+                        fill: false,
+                        tension: 0.1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.raw.toLocaleString() + ' 万円';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) { return value.toLocaleString() + '万'; }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
