@@ -3,221 +3,236 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FIREシミュレーション</title>
-    <!-- Tailwind CSS (スタイリング用) -->
-    <script src="https://jsdelivr.net"></script>
-    <!-- Chart.js (グラフ描画用) -->
-    <script src="https://jsdelivr.net"></script>
+    <title>FIREシミュレーション・ダッシュボード</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+        }
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 768px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+        .control-group {
+            margin-bottom: 20px;
+        }
+        .control-group:last-child { margin-bottom: 0; }
+        .label-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        .value-display {
+            color: var(--primary-color);
+            font-size: 1.1rem;
+        }
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: var(--border-color);
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+        }
+        .result-title {
+            font-size: 1.1rem;
+            color: #64748b;
+            margin-bottom: 5px;
+        }
+        .result-value {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+        .breakdown {
+            border-top: 1px solid var(--border-color);
+            padding-top: 15px;
+        }
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+        }
+    </style>
 </head>
-<body class="bg-gray-50 text-gray-800 p-4 pb-12 text-xs font-sans antialiased">
+<body>
 
-    <header class="mb-4 text-center">
-        <h1 class="text-xl font-extrabold text-slate-900">🔥 FIRE Dashboard</h1>
-        <p class="text-[10px] text-gray-400 mt-1">数値を動かして将来の資産をリアルタイムにシミュレーション</p>
-    </header>
+<div class="container">
+    <h1>🔥 FIREシミュレーション</h1>
+    
+    <div class="grid">
+        <!-- 入力コントロール -->
+        <div class="card">
+            <div class="control-group">
+                <div class="label-wrapper">
+                    <label for="initAsset">現在の資産</label>
+                    <span class="value-display"><span id="initAssetVal">3,000</span>万円</span>
+                </div>
+                <input type="range" id="initAsset" min="0" max="10000" step="100" value="3000">
+            </div>
 
-    <!-- コントロールパネル (スライダーエリア) -->
-    <div class="bg-white p-3 rounded-xl border border-gray-100 mb-4 grid grid-cols-2 gap-3 font-bold text-gray-700">
-        <div>
-            <label class="block mb-1">運用資産: <span id="vInv" class="text-emerald-600">13,000</span>万</label>
-            <input type="range" id="iInv" min="5000" max="30000" step="500" value="13000" class="w-full h-1 bg-gray-200 rounded cursor-pointer" oninput="sim()">
-        </div>
-        <div>
-            <label class="block mb-1">現金保有: <span id="vCash" class="text-slate-600">3,000</span>万</label>
-            <input type="range" id="iCash" min="0" max="10000" step="500" value="3000" class="w-full h-1 bg-gray-200 rounded cursor-pointer" oninput="sim()">
-        </div>
-        <div>
-            <label class="block mb-1">運用利回り: <span id="vYld" class="text-blue-600">4.0</span>%</label>
-            <input type="range" id="iYld" min="0" max="10" step="0.5" value="4.0" class="w-full h-1 bg-gray-200 rounded cursor-pointer" oninput="sim()">
-        </div>
-        <div>
-            <label class="block mb-1">インフレ率: <span id="vInf" class="text-red-500">2.0</span>%</label>
-            <input type="range" id="iInf" min="0" max="5" step="0.5" value="2.0" class="w-full h-1 bg-gray-200 rounded cursor-pointer" oninput="sim()">
-        </div>
-    </div>
+            <div class="control-group">
+                <div class="label-wrapper">
+                    <label for="monthlyInput">毎月の積立額</label>
+                    <span class="value-display"><span id="monthlyInputVal">10</span>万円</span>
+                </div>
+                <input type="range" id="monthlyInput" min="0" max="100" step="1" value="10">
+            </div>
 
-    <!-- ハイライトカード (要約数値) -->
-    <div class="grid grid-cols-4 gap-2 mb-4 font-bold text-center text-[10px]">
-        <div class="bg-white p-2 rounded border border-gray-100">
-            <p class="text-gray-400 mb-1">60歳総資産</p>
-            <span id="s60" class="text-slate-800 text-xs font-extrabold">-</span>
-        </div>
-        <div class="bg-white p-2 rounded border border-gray-100">
-            <p class="text-gray-400 mb-1">70歳総資産</p>
-            <span id="s70" class="text-slate-800 text-xs font-extrabold">-</span>
-        </div>
-        <div class="bg-white p-2 rounded border border-gray-100">
-            <p class="text-gray-400 mb-1">90歳総資産</p>
-            <span id="s90" class="text-slate-800 text-xs font-extrabold">-</span>
-        </div>
-        <div id="rCard" class="p-2 rounded border border-gray-200 bg-white">
-            <p class="text-gray-400 mb-1">枯渇リスク</p>
-            <span id="sRisk" class="text-xs font-extrabold">-</span>
-        </div>
-    </div>
+            <div class="control-group">
+                <div class="label-wrapper">
+                    <label for="years">積立・運用期間</label>
+                    <span class="value-display"><span id="yearsVal">15</span>年</span>
+                </div>
+                <input type="range" id="years" min="1" max="40" step="1" value="15">
+            </div>
 
-    <!-- グラフエリア -->
-    <div class="bg-white p-3 rounded-xl border border-gray-100 mb-4 h-[260px] relative">
-        <canvas id="fChart"></canvas>
-    </div>
+            <div class="control-group">
+                <div class="label-wrapper">
+                    <label for="yield">想定年利 (運用リターン)</label>
+                    <span class="value-display"><span id="yieldVal">5.0</span>%</span>
+                </div>
+                <input type="range" id="yield" min="0" max="15" step="0.5" value="5">
+            </div>
+        </div>
 
-    <!-- データテーブル -->
-    <div class="bg-white rounded-xl border border-gray-100 overflow-hidden">
-        <div class="overflow-x-auto max-h-[300px]">
-            <table class="w-full text-left border-collapse text-[11px] whitespace-nowrap">
-                <thead class="bg-gray-50 text-gray-500 font-bold sticky top-0 border-b border-gray-100">
-                    <tr>
-                        <th class="p-2 pl-3">年齢</th>
-                        <th class="p-2">生活費</th>
-                        <th class="p-2">年金</th>
-                        <th class="p-2">運用資産</th>
-                        <th class="p-2">現金</th>
-                        <th class="p-2 pr-3 text-right">総資産</th>
-                    </tr>
-                </thead>
-                <tbody id="tBody" class="divide-y divide-gray-100 text-gray-600">
-                    <!-- 動的に挿入 -->
-                </tbody>
-            </table>
+        <!-- 計算結果表示 -->
+        <div class="card" style="display: flex; flex-direction: column; justify-content: center;">
+            <div class="result-title">期間終了時の想定総資産</div>
+            <div class="result-value" id="totalAsset">--- 円</div>
+            
+            <div class="breakdown">
+                <div class="breakdown-item">
+                    <span>投資元本総額:</span>
+                    <span id="totalPrincipal">--- 円</span>
+                </div>
+                <div class="breakdown-item">
+                    <span>運用利益（複利効果）:</span>
+                    <span id="totalInterest" style="color: #10b981; font-weight: bold;">--- 円</span>
+                </div>
+                <div class="breakdown-item" style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed var(--border-color);">
+                    <span>4%ルールでの年間取崩し目安:</span>
+                    <span id="fourPercentRule" style="font-weight: bold;">--- 円</span>
+                </div>
+            </div>
         </div>
     </div>
+</div>
 
-    <script>
-        let chart = null;
+<script>
+    // DOM要素の取得
+    const inputs = {
+        initAsset: document.getElementById('initAsset'),
+        monthlyInput: document.getElementById('monthlyInput'),
+        years: document.getElementById('years'),
+        yield: document.getElementById('yield')
+    };
 
-        function sim() {
-            const dom = {
-                iInv: document.getElementById('iInv'),
-                iCash: document.getElementById('iCash'),
-                iYld: document.getElementById('iYld'),
-                iInf: document.getElementById('iInf'),
-                vInv: document.getElementById('vInv'),
-                vCash: document.getElementById('vCash'),
-                vYld: document.getElementById('vYld'),
-                vInf: document.getElementById('vInf'),
-                s60: document.getElementById('s60'),
-                s70: document.getElementById('s70'),
-                s90: document.getElementById('s90'),
-                sRisk: document.getElementById('sRisk'),
-                rCard: document.getElementById('rCard'),
-                tBody: document.getElementById('tBody')
-            };
+    const displays = {
+        initAssetVal: document.getElementById('initAssetVal'),
+        monthlyInputVal: document.getElementById('monthlyInputVal'),
+        yearsVal: document.getElementById('yearsVal'),
+        yieldVal: document.getElementById('yieldVal'),
+        totalAsset: document.getElementById('totalAsset'),
+        totalPrincipal: document.getElementById('totalPrincipal'),
+        totalInterest: document.getElementById('totalInterest'),
+        fourPercentRule: document.getElementById('fourPercentRule')
+    };
 
-            // 要素が取得できない場合は処理をスキップ
-            if (!dom.iInv || !dom.iCash || !dom.iYld || !dom.iInf) return;
+    // 通貨フォーマット関数 (例: 12,345,678円)
+    function formatCurrency(num) {
+        return Math.round(num).toLocaleString('ja-JP') + ' 円';
+    }
 
-            const initInv = parseFloat(dom.iInv.value);
-            const initCash = parseFloat(dom.iCash.value);
-            const yld = parseFloat(dom.iYld.value) / 100;
-            const inf = parseFloat(dom.iInf.value) / 100;
+    // 計算メインロジック
+    function calculateFIRE() {
+        // スライドバーの値を取得（単位変換含む）
+        const initAsset = parseFloat(inputs.initAsset.value) * 10000; // 万円 -> 円
+        const monthlyInput = parseFloat(inputs.monthlyInput.value) * 10000; // 万円 -> 円
+        const years = parseInt(inputs.years.value);
+        const annualYield = parseFloat(inputs.yield.value) / 100;
 
-            // スライダー横の数値表示を更新
-            dom.vInv.textContent = initInv.toLocaleString();
-            dom.vCash.textContent = initCash.toLocaleString();
-            dom.vYld.textContent = (yld * 100).toFixed(1);
-            dom.vInf.textContent = (inf * 100).toFixed(1);
+        // スライドバー横の数字表示をリアルタイム更新
+        displays.initAssetVal.textContent = parseInt(inputs.initAsset.value).toLocaleString();
+        displays.monthlyInputVal.textContent = inputs.monthlyInput.value;
+        displays.yearsVal.textContent = inputs.years.value;
+        displays.yieldVal.textContent = annualYield === 0 ? "0.0" : parseFloat(inputs.yield.value).toFixed(1);
 
-            let cInv = initInv;
-            let cCash = initCash;
-            let rAge = null;
-            let t60 = 0, t70 = 0, t90 = 0;
+        // 複利計算
+        let total = initAsset;
+        const monthlyYield = annualYield / 12;
+        const totalMonths = years * 12;
 
-            const lbls = [];
-            const dInv = [];
-            const dCash = [];
-            const dTot = [];
-
-            dom.tBody.innerHTML = '';
-
-            for (let a = 44; a <= 90; a++) {
-                if (a > 44) {
-                    cInv = cInv * (1 + yld);
-                } else {
-                    cInv = cInv * (1 + yld);
-                }
-
-                let baseCost = (a <= 59) ? 500 : 400;
-                let cost = baseCost * Math.pow(1 + inf, a - 44);
-
-                let pen = 0;
-                if (a >= 60) {
-                    pen = 100 * Math.pow(1 + inf, a - 60);
-                }
-
-                let def = cost - pen;
-                if (def > 0) {
-                    if (cInv >= def) {
-                        cInv -= def;
-                    } else {
-                        let remainDef = def - cInv;
-                        cInv = 0;
-                        cCash = Math.max(0, cCash - remainDef);
-                    }
-                }
-
-                let tot = cInv + cCash;
-
-                if (tot <= 0 && rAge === null) {
-                    rAge = a;
-                }
-
-                if (a === 60) t60 = tot;
-                if (a === 70) t70 = tot;
-                if (a === 90) t90 = tot;
-
-                lbls.push(a + '歳');
-                dInv.push(Math.round(cInv));
-                dCash.push(Math.round(cCash));
-                dTot.push(Math.round(tot));
-
-                const row = document.createElement('tr');
-                row.className = a % 2 === 0 ? 'bg-gray-50/50' : 'bg-white';
-                row.innerHTML = `
-                    <td class="p-2 pl-3 font-bold text-gray-900">${a}歳</td>
-                    <td class="p-2 text-red-500">-${Math.round(cost).toLocaleString()}</td>
-                    <td class="p-2 text-emerald-600">+${Math.round(pen).toLocaleString()}</td>
-                    <td class="p-2">${Math.round(cInv).toLocaleString()}</td>
-                    <td class="p-2">${Math.round(cCash).toLocaleString()}</td>
-                    <td class="p-2 pr-3 text-right font-bold ${tot > 0 ? 'text-slate-900' : 'text-red-600'}">${Math.round(tot).toLocaleString()}</td>
-                `;
-                dom.tBody.appendChild(row);
+        if (monthlyYield === 0) {
+            total = initAsset + (monthlyInput * totalMonths);
+        } else {
+            for (let i = 0; i < totalMonths; i++) {
+                total = (total + monthlyInput) * (1 + monthlyYield);
             }
+        }
 
-            // カードの値を更新
-            dom.s60.textContent = Math.round(t60).toLocaleString() + "万";
-            dom.s70.textContent = Math.round(t70).toLocaleString() + "万";
-            dom.s90.textContent = Math.round(t90).toLocaleString() + "万";
+        // 元本と利益の計算
+        const totalPrincipal = initAsset + (monthlyInput * totalMonths);
+        const totalInterest = Math.max(0, total - totalPrincipal);
+        const fourPercent = total * 0.04;
 
-            if (rAge !== null) {
-                dom.sRisk.textContent = rAge + "歳枯渇";
-                dom.rCard.className = "p-2 rounded border bg-red-50 border-red-200 text-red-700 font-bold";
-            } else {
-                dom.sRisk.textContent = "なし";
-                dom.rCard.className = "p-2 rounded border bg-emerald-50 border-emerald-200 text-emerald-700 font-bold";
-            }
+        // 結果画面の空白を埋める（UIへ反映）
+        displays.totalAsset.textContent = formatCurrency(total);
+        displays.totalPrincipal.textContent = formatCurrency(totalPrincipal);
+        displays.totalInterest.textContent = formatCurrency(totalInterest);
+        displays.fourPercentRule.textContent = formatCurrency(fourPercent) + `（月額 約${Math.round(fourPercent / 12).toLocaleString()}円）`;
+    }
 
-            // グラフの破棄と再描画
-            if (chart) {
-                chart.destroy();
-            }
+    // すべての入力イベントにリスナーを設定（inputイベントでリアルタイム連動）
+    Object.values(inputs).forEach(input => {
+        input.addEventListener('input', calculateFIRE);
+    });
 
-            const ctx = document.getElementById('fChart');
-            if (ctx) {
-                chart = new Chart(ctx.getContext('2d'), {
-                    type: 'line',
-                    data: {
-                        labels: lbls,
-                        datasets: [
-                            { label: '総資産', data: dTot, borderColor: '#0284c7', backgroundColor: 'rgba(2, 132, 199, 0.05)', fill: true, borderWidth: 2, pointRadius: 1 },
-                            { label: '運用', data: dInv, borderColor: '#10b981', fill: false, borderWidth: 1.5, pointRadius: 0 },
-                            { label: '現金', data: dCash, borderColor: '#94a3b8', fill: false, borderWidth: 1.5, pointRadius: 0 }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { position: 'top', labels: { boxWidth: 10, font: { size: 9 } } }
-                        },
-                        scales: {
-                            y: { beginAtZero: true, ticks: { font: { size: 8 }, callback: function(v) { return v.toLocaleString() + '万'; } } },
+    // 初期読み込み時に一度計算を走らせる
+    window.addEventListener('DOMContentLoaded', calculateFIRE);
+</script>
+
+</body>
+</html>
