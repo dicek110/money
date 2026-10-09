@@ -306,7 +306,7 @@ function runCore(targetRA) {
                 // 含み益の割合を計算
                 let profitRatio = Math.max(0, (inv - totalPrincipal) / inv);
                 
-                // 生活費を取り崩す際の利益に対する税金と総額を計算（バグ修正済み）
+                // 生活費を取り崩す際の利益に対する税金と総額を計算（修正済み）
                 let taxOnProfit = needed * profitRatio * 0.20315;
                 let totalWithdrawal = needed + taxOnProfit;
                 
