@@ -1,429 +1,108 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>超本格FIREシミュレーション・ダッシュボード</title>
-    <!-- グラフ描画用のライブラリを読み込み -->
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>本格FIREシミュレーター</title>
     <script src="https://jsdelivr.net"></script>
     <style>
-        :root {
-            --primary-color: #2563eb;
-            --bg-color: #f1f5f9;
-            --card-bg: #ffffff;
-            --text-color: #1e293b;
-            --border-color: #e2e8f0;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            max-width: 700px;
-            margin: 0 auto;
-        }
-        h1 {
-            text-align: center;
-            color: var(--primary-color);
-            margin-bottom: 20px;
-            font-size: 1.8rem;
-        }
-        .section-title {
-            font-size: 1.1rem;
-            font-weight: bold;
-            margin: 20px 0 10px 0;
-            color: #475569;
-            border-left: 4px solid var(--primary-color);
-            padding-left: 8px;
-        }
-        .card {
-            background: var(--card-bg);
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            margin-bottom: 20px;
-        }
-        .control-group {
-            margin-bottom: 18px;
-        }
-        .control-group:last-child { margin-bottom: 0; }
-        .label-wrapper {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 6px;
-            font-weight: bold;
-            font-size: 0.95rem;
-        }
-        .value-display {
-            color: var(--primary-color);
-            font-size: 1rem;
-        }
-        input[type="range"] {
-            width: 100%;
-            height: 6px;
-            background: var(--border-color);
-            border-radius: 3px;
-            outline: none;
-            -webkit-appearance: none;
-        }
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: var(--primary-color);
-            cursor: pointer;
-        }
-        
-        .calc-btn {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 15px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            border-radius: 12px;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
-            transition: background-color 0.2s, transform 0.1s;
-            width: 100%;
-            margin-bottom: 25px;
-        }
-        .calc-btn:hover { background-color: #1d4ed8; }
-        .calc-btn:active { transform: scale(0.99); }
-
-        .result-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-        .result-item {
-            background: #f8fafc;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-        }
-        .result-label { font-size: 0.85rem; color: #64748b; margin-bottom: 4px; }
-        .result-value { font-size: 1.15rem; font-weight: bold; }
-        
-        .chart-container {
-            position: relative;
-            width: 100%;
-            height: 320px;
-            margin-top: 15px;
-        }
+        :root { --p: #2563eb; --bg: #f1f5f9; --txt: #1e293b; --b: #e2e8f0; }
+        body { font-family: sans-serif; background: var(--bg); color: var(--txt); padding:15px; margin:0; }
+        .container { max-width: 600px; margin: 0 auto; }
+        h1 { text-align: center; color: var(--p); font-size: 1.5rem; margin-bottom: 15px; }
+        .sec { font-size: 0.95rem; font-weight: bold; margin: 15px 0 5px 0; color: #475569; border-left: 4px solid var(--p); padding-left: 8px; }
+        .card { background: #fff; border-radius: 12px; padding: 14px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        .row { margin-bottom: 12px; }
+        .lbl-wp { display: flex; justify-content: space-between; font-weight: bold; font-size: 0.85rem; margin-bottom: 2px; }
+        input[type="range"] { width: 100%; height: 6px; background: var(--b); border-radius: 3px; outline: none; -webkit-appearance: none; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--p); cursor: pointer; }
+        .btn { background: var(--p); color: #fff; border: none; padding: 12px; font-size: 1rem; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; margin-bottom: 15px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        .res { background: #f8fafc; padding: 8px; border-radius: 6px; border: 1px solid var(--b); }
+        .r-lbl { font-size: 0.75rem; color: #64748b; }
+        .r-val { font-size: 1rem; font-weight: bold; }
+        .chart-wp { position: relative; width: 100%; height: 280px; margin-top: 10px; }
     </style>
 </head>
 <body>
-
 <div class="container">
-    <h1>🔥 FIREシミュレーション</h1>
-    
-    <!-- 入力カード -->
+    <h1>🔥 FIREシミュレーター</h1>
     <div class="card">
-        <div class="section-title" style="margin-top:0;">基本情報設定</div>
-        <div class="control-group">
-            <div class="label-wrapper">
-                <label for="currentAge">現在の年齢</label>
-                <span class="value-display"><span id="currentAgeVal">35</span>歳</span>
-            </div>
-            <input type="range" id="currentAge" min="20" max="65" step="1" value="35">
-        </div>
-        <div class="control-group">
-            <div class="label-wrapper">
-                <label for="retireAge">リタイア（退職）年齢</label>
-                <span class="value-display"><span id="retireAgeVal">50</span>歳</span>
-            </div>
-            <input type="range" id="retireAge" min="30" max="70" step="1" value="50">
-        </div>
-
-        <div class="section-title">生活費設定（2ステージ化）</div>
-        <div class="control-group">
-            <div class="label-wrapper">
-                <label for="costBefore60">60歳前の年間生活費</label>
-                <span class="value-display"><span id="costBefore60Val">400</span>万円</span>
-            </div>
-            <input type="range" id="costBefore60" min="100" max="1000" step="10" value="400">
-        </div>
-        <div class="control-group">
-            <div class="label-wrapper">
-                <label for="costAfter60">60歳以降の年間生活費</label>
-                <span class="value-display"><span id="costAfter60Val">300</span>万円</span>
-            </div>
-            <input type="range" id="costAfter60" min="100" max="1000" step="10" value="300">
-        </div>
-
-        <div class="section-title">初期資産・運用設定</div>
-        <div class="control-group">
-            <div class="label-wrapper">
-                <label for="investAsset">運用資産（初期）</label>
-                <span class="value-display"><span id="investAssetVal">2,000</span>万円</span>
-            </div>
-            <input type="range" id="investAsset" min="0" max="10000" step="100" value="2000">
-        </div>
-        <div class="control-group">
-            <div class="label-wrapper">
-                <label for="cashAsset">現金保有（初期）</label>
-                <span class="value-display"><span id="cashAssetVal">1,900</span>万円</span>
-            </div>
-            <input type="range" id="cashAsset" min="0" max="5000" step="100" value="1900">
-        </div>
-        <div class="control-group">
-            <div class="label-wrapper">
-                <label for="yield">運用利回り</label>
-                <span class="value-display"><span id="yieldVal">4.0</span>%</span>
-            </div>
-            <input type="range" id="yield" min="0" max="15" step="0.1" value="4.0">
-        </div>
-        <div class="control-group">
-            <div class="label-wrapper">
-                <label for="inflation">インフレ率</label>
-                <span class="value-display"><span id="inflationVal">2.0</span>%</span>
-            </div>
-            <input type="range" id="inflation" min="0" max="10" step="0.1" value="2.0">
-        </div>
-
-        <div class="section-title">iDeCo（確定拠出年金）設定</div>
-        <div class="control-group">
-            <div class="label-wrapper">
-                <label for="idecoMonthly">毎月のiDeCo拠出額（60歳まで積立）</label>
-                <span class="value-display"><span id="idecoMonthlyVal">2.3</span>万円</span>
-            </div>
-            <input type="range" id="idecoMonthly" min="0" max="6.8" step="0.1" value="2.3">
-        </div>
-        <div class="control-group">
-            <div class="label-wrapper">
-                <label for="idecoReceiveAge">iDeCo受け取り開始年齢</label>
-                <span class="value-display"><span id="idecoReceiveAgeVal">60</span>歳</span>
-            </div>
-            <input type="range" id="idecoReceiveAge" min="60" max="75" step="1" value="60">
-        </div>
-
-        <div class="section-title">公的年金設定（繰上・繰下対応）</div>
-        <div class="control-group">
-            <div class="label-wrapper">
-                <label for="pensionBase">年金予定額（65歳基準・年間）</label>
-                <span class="value-display"><span id="pensionBaseVal">150</span>万円</span>
-            </div>
-            <input type="range" id="pensionBase" min="0" max="400" step="10" value="150">
-        </div>
-        <div class="control-group">
-            <div class="label-wrapper">
-                <label for="pensionAge">年金受給開始年齢</label>
-                <span class="value-display"><span id="pensionAgeVal">65</span>歳</span>
-            </div>
-            <input type="range" id="pensionAge" min="60" max="75" step="1" value="65">
-        </div>
-        <div class="control-group" style="font-size: 0.85rem; color: #64748b; margin-top: -10px;">
-            ※受給開始を早めると月0.4%減額、遅らせると月0.7%増額されます。
-        </div>
+        <div class="sec" style="margin-top:0;">基本情報</div>
+        <div class="row"><div class="lbl-wp"><label for="cA">現在の年齢</label><span><span id="cAV">35</span>歳</span></div><input type="range" id="cA" min="20" max="65" value="35"></div>
+        <div class="row"><div class="lbl-wp"><label for="rA">リタイア年齢</label><span><span id="rAV">50</span>歳</span></div><input type="range" id="rA" min="25" max="70" value="50"></div>
+        <div class="row"><div class="lbl-wp"><label for="inc">現在の年収</label><span><span id="incV">600</span>万円</span></div><input type="range" id="inc" min="200" max="2000" step="50" value="600"></div>
+        <div class="sec">初期資産（MAX 2億円）</div>
+        <div class="row"><div class="lbl-wp"><label for="ivA">運用資産</label><span><span id="ivAV">2,000</span>万円</span></div><input type="range" id="ivA" min="0" max="20000" step="500" value="2000"></div>
+        <div class="row"><div class="lbl-wp"><label for="csA">現金保有</label><span><span id="csAV">1,000</span>万円</span></div><input type="range" id="csA" min="0" max="10000" step="100" value="1000"></div>
+        <div class="row"><div class="lbl-wp"><label for="idc">現在のiDeCo残高</label><span><span id="idcV">300</span>万円</span></div><input type="range" id="idc" min="0" max="3000" step="50" value="300"></div>
+        <div class="row"><div class="lbl-wp"><label for="yld">運用利回り</label><span><span id="yldV">4.0</span>%</span></div><input type="range" id="yld" min="0" max="15" step="0.1" value="4.0"></div>
+        <div class="sec">生活費・年金</div>
+        <div class="row"><div class="lbl-wp"><label for="cB6">60歳前の年間生活費</label><span><span id="cB6V">400</span>万円</span></div><input type="range" id="cB6" min="100" max="1000" step="10" value="400"></div>
+        <div class="row"><div class="lbl-wp"><label for="cA6">60歳以降の年間生活費</label><span><span id="cA6V">300</span>万円</span></div><input type="range" id="cA6" min="100" max="1000" step="10" value="300"></div>
+        <div class="row"><div class="lbl-wp"><label for="pen">年金（65歳基準・年額）</label><span><span id="penV">150</span>万円</span></div><input type="range" id="pen" min="0" max="400" step="10" value="150"></div>
+        <div class="row"><div class="lbl-wp"><label for="pA">年金受給開始年齢</label><span><span id="pAV">65</span>歳</span></div><input type="range" id="pA" min="60" max="75" value="65"></div>
     </div>
-
-    <!-- 実行ボタン -->
-    <button id="calcBtn" class="calc-btn">シミュレーションを実行する</button>
-
-    <!-- 結果表示カード -->
+    <button id="btn" class="btn">シミュレーションを実行する</button>
     <div class="card">
-        <div class="section-title" style="margin-top:0;">シミュレーション結果</div>
-        <div class="result-grid">
-            <div class="result-item"><div class="result-label">60歳総資産</div><div class="result-value" id="asset60">---</div></div>
-            <div class="result-item"><div class="result-label">70歳総資産</div><div class="result-value" id="asset70">---</div></div>
-            <div class="result-item"><div class="result-label">90歳総資産</div><div class="result-value" id="asset90">---</div></div>
-            <div class="result-item"><div class="result-label">枯渇リスク</div><div class="result-value" id="riskStatus">---</div></div>
+        <div class="sec" style="margin-top:0;">結果</div>
+        <div class="grid">
+            <div class="res"><div class="r-lbl">60歳総資産</div><div class="r-val" id="o60">---</div></div>
+            <div class="res"><div class="r-lbl">70歳総資産</div><div class="r-val" id="o70">---</div></div>
+            <div class="res"><div class="r-lbl">90歳総資産</div><div class="r-val" id="o90">---</div></div>
+            <div class="res"><div class="r-lbl">資産寿命</div><div class="r-val" id="risk">---</div></div>
         </div>
-
-        <!-- グラフ描画エリア -->
-        <div class="chart-container">
-            <canvas id="assetChart"></canvas>
-        </div>
+        <div class="chart-wp"><canvas id="chart"></canvas></div>
     </div>
 </div>
 <script>
-    // 要素の取得
-    const inputs = {
-        currentAge: document.getElementById('currentAge'),
-        retireAge: document.getElementById('retireAge'),
-        costBefore60: document.getElementById('costBefore60'),
-        costAfter60: document.getElementById('costAfter60'),
-        investAsset: document.getElementById('investAsset'),
-        cashAsset: document.getElementById('cashAsset'),
-        yield: document.getElementById('yield'),
-        inflation: document.getElementById('inflation'),
-        idecoMonthly: document.getElementById('idecoMonthly'),
-        idecoReceiveAge: document.getElementById('idecoReceiveAge'),
-        pensionBase: document.getElementById('pensionBase'),
-        pensionAge: document.getElementById('pensionAge')
-    };
-
-    const displays = {};
-    Object.keys(inputs).forEach(key => displays[key] = document.getElementById(key + 'Val'));
-
-    const outputs = {
-        asset60: document.getElementById('asset60'),
-        asset70: document.getElementById('asset70'),
-        asset90: document.getElementById('asset90'),
-        risk: document.getElementById('riskStatus')
-    };
-
-    const calcBtn = document.getElementById('calcBtn');
-    let assetChart = null;
-
-    function formatOkuMan(yen) {
-        if (yen <= 0) return "0円";
-        const man = Math.round(yen / 10000);
-        if (man >= 10000) {
-            const oku = Math.floor(man / 10000);
-            const rem = man % 10000;
-            return rem > 0 ? `${oku}億${rem.toLocaleString()}万円` : `${oku}億円`;
-        }
-        return `${man.toLocaleString()}万円`;
+    const ids = ['cA','rA','inc','ivA','csA','idc','yld','cB6','cA6','pen','pA'];
+    const el = {}, disp = {}; ids.forEach(id => { el[id] = document.getElementById(id); disp[id] = document.getElementById(id+'V'); });
+    const out = { 60: document.getElementById('o60'), 70: document.getElementById('o70'), 90: document.getElementById('o90'), risk: document.getElementById('risk') };
+    let ctxChart = null;
+    function fmt(y) {
+        if (y <= 0) return "0円"; const m = Math.round(y / 10000);
+        if (m >= 10000) { const o = Math.floor(m / 10000); const r = m % 10000; return r > 0 ? `${o}億${r.toLocaleString()}万円` : `${o}億円`; }
+        return `${m.toLocaleString()}万円`;
     }
-
-    // スライドバー数値の同期処理
-    function updateLabels() {
-        if (parseInt(inputs.retireAge.value) < parseInt(inputs.currentAge.value)) {
-            inputs.retireAge.value = inputs.currentAge.value;
-        }
-        Object.keys(inputs).forEach(key => {
-            const val = parseFloat(inputs[key].value);
-            if (key === 'yield' || key === 'inflation' || key === 'idecoMonthly') {
-                displays[key].textContent = val.toFixed(1);
+    function sync() {
+        if (parseInt(el.rA.value) < parseInt(el.cA.value)) el.rA.value = el.cA.value;
+        ids.forEach(id => { let v = parseFloat(el[id].value); disp[id].textContent = (id==='yld') ? v.toFixed(1) : v.toLocaleString(); });
+    }
+    function calc() {
+        const cA = parseInt(el.cA.value), rA = parseInt(el.rA.value), pA = parseInt(el.pA.value);
+        const inc = parseFloat(el.inc.value)*10000, cB = parseFloat(el.cB6.value)*10000, cA6 = parseFloat(el.cA6.value)*10000;
+        let inv = parseFloat(el.ivA.value)*10000, cash = parseFloat(el.csA.value)*10000, idc = parseFloat(el.idc.value)*10000;
+        const r = parseFloat(el.yld.value)/100, pB = parseFloat(el.pen.value)*10000;
+        let pR = 1.0; if(pA < 65) pR -= (65 - pA)*12*0.004; else if(pA > 65) pR += (pA - 65)*12*0.007;
+        const pension = pB * pR;
+        let lbs = [], dInv = [], dCs = [], die = 0;
+        for (let a = cA; a <= 100; a++) {
+            if (a === 60) { cash += idc; idc = 0; }
+            let tot = inv + cash + idc; lbs.push(a + "歳"); dInv.push(Math.round(inv)); dCs.push(Math.round(cash + idc));
+            if (a === 60) out[60].textContent = fmt(tot); if (a === 70) out[70].textContent = fmt(tot); if (a === 90) out[90].textContent = fmt(tot);
+            if (tot <= 0 && die === 0) die = a;
+            if (a < rA) {
+                let s = inc - cB; if (s > 0) inv += s; else cash += s;
+                inv *= (1 + r); if (a < 60) idc *= (1 + r);
             } else {
-                displays[key].textContent = val.toLocaleString();
+                let cost = (a < 60) ? cB : cA6; if (a >= pA) cash += pension;
+                if (inv >= cost) { inv -= cost; } else { let rem = cost - inv; inv = 0; cash -= rem; }
+                if (inv > 0) inv *= (1 + r); if (cash < 0) cash = 0; if (a < 60) idc *= (1 + r);
             }
+        }
+        if (cA > 60) out[60].textContent = "対象外"; if (cA > 70) out[70].textContent = "対象外"; if (cA > 90) out[90].textContent = "対象外";
+        if (die > 0) { out.risk.textContent = `${die}歳で枯渇`; out.risk.style.color = "#dc2626"; } else { out.risk.textContent = "100歳クリア"; out.risk.style.color = "#16a34a"; }
+        if (ctxChart) ctxChart.destroy();
+        ctxChart = new Chart(document.getElementById('chart').getContext('2d'), {
+            type: 'line', data: { labels: lbs, datasets: [
+                { label: '運用資産', data: dInv, borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,0.4)', fill: true, tension: 0.1, pointRadius:0 },
+                { label: '現金口座', data: dCs, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.4)', fill: true, tension: 0.1, pointRadius:0 }
+            ]}, options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true, ticks: { callback: function(v) { return (v / 10000).toLocaleString() + '万'; } } } } }
         });
     }
-
-    // 計算＆グラフ描画
-    function runSimulation() {
-        const currentAge = parseInt(inputs.currentAge.value);
-        const retireAge = parseInt(inputs.retireAge.value);
-        const costBefore = parseFloat(inputs.costBefore60.value) * 10000;
-        const costAfter = parseFloat(inputs.costAfter60.value) * 10000;
-        let mainInvest = parseFloat(inputs.investAsset.value) * 10000000 / 1000; 
-        let cash = parseFloat(inputs.cashAsset.value) * 10000;
-        const yieldRate = parseFloat(inputs.yield.value) / 100;
-        const inflationRate = parseFloat(inputs.inflation.value) / 100;
-        const realRate = yieldRate - inflationRate; 
-
-        const idecoInput = parseFloat(inputs.idecoMonthly.value) * 10000; 
-        const idecoRecAge = parseInt(inputs.idecoReceiveAge.value);
-        let idecoTotal = 0; 
-
-        const pBase = parseFloat(inputs.pensionBase.value) * 10000;
-        const pAge = parseInt(inputs.pensionAge.value);
-        let pRate = 1.0;
-        if (pAge < 65) {
-            pRate -= (65 - pAge) * 12 * 0.004; 
-        } else if (pAge > 65) {
-            pRate += (pAge - 65) * 12 * 0.007; 
-        }
-        const annualPension = pBase * pRate;
-
-        let ageLabels = [];
-        let totalAssetData = [];
-        let isKatsuhisa = false;
-        let katsuhisaAge = 0;
-
-        for (let age = currentAge; age <= 100; age++) {
-            let totalAssetNow = mainInvest + cash + idecoTotal;
-            ageLabels.push(age + "歳");
-            totalAssetData.push(Math.round(totalAssetNow));
-
-            if (age === 60) outputs.asset60.textContent = formatOkuMan(totalAssetNow);
-            if (age === 70) outputs.asset70.textContent = formatOkuMan(totalAssetNow);
-            if (age === 90) outputs.asset90.textContent = formatOkuMan(totalAssetNow);
-
-            if (totalAssetNow <= 0 && !isKatsuhisa) {
-                isKatsuhisa = true;
-                katsuhisaAge = age;
-            }
-
-            if (age < 60) {
-                idecoTotal = (idecoTotal + (idecoInput * 12)) * (1 + realRate);
-            } else {
-                idecoTotal = idecoTotal * (1 + realRate);
-            }
-            let idecoPayout = 0;
-            if (age >= idecoRecAge && age < idecoRecAge + 10 && idecoTotal > 0) {
-                idecoPayout = idecoTotal / (idecoRecAge + 10 - age);
-                idecoTotal -= idecoPayout; 
-            }
-
-            if (age < retireAge) {
-                if (age < 60) cash -= (idecoInput * 12); 
-                mainInvest = mainInvest * (1 + realRate);
-            } else {
-                let currentCost = (age < 60) ? costBefore : costAfter;
-                let income = idecoPayout; 
-                if (age >= pAge) income += annualPension; 
-
-                let netFlow = income - currentCost;
-                mainInvest = (mainInvest + netFlow);
-                if (mainInvest < 0) {
-                    cash += mainInvest; 
-                    mainInvest = 0;
-                }
-                mainInvest = mainInvest * (1 + realRate);
-                if (cash < 0) cash = 0;
-            }
-        }
-
-        if (currentAge > 60) outputs.asset60.textContent = "対象外";
-        if (currentAge > 70) outputs.asset70.textContent = "対象外";
-        if (currentAge > 90) outputs.asset90.textContent = "対象外";
-
-        if (isKatsuhisa) {
-            outputs.risk.textContent = `⚠️ 危険 (${katsuhisaAge}歳で枯渇)`;
-            outputs.risk.style.color = "#dc2626";
-        } else if (totalAssetData[90 - currentAge] < (parseFloat(inputs.investAsset.value)*10000000/1000 + parseFloat(inputs.cashAsset.value)*10000) * 0.3) {
-            outputs.risk.textContent = "⚡ 注意 (減少傾向)";
-            outputs.risk.style.color = "#d97706";
-        } else {
-            outputs.risk.textContent = "✅ 安全 (資産維持)";
-            outputs.risk.style.color = "#16a34a";
-        }
-
-        if (assetChart) assetChart.destroy();
-        const ctx = document.getElementById('assetChart').getContext('2d');
-        assetChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ageLabels,
-                datasets: [{
-                    label: '総資産総額 (円)',
-                    data: totalAssetData,
-                    borderColor: '#2563eb',
-                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                    borderWidth: 3,
-                    fill: true,
-                    tension: 0.1,
-                    pointRadius: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { ticks: { callback: function(value) { return (value / 10000).toLocaleString() + '万'; } } }
-                }
-            }
-        });
-    }
-
-    Object.values(inputs).forEach(input => input.addEventListener('input', updateLabels));
-    calcBtn.addEventListener('click', runSimulation);
-
-    window.addEventListener('DOMContentLoaded', () => {
-        updateLabels();
-        runSimulation();
-    });
+    ids.forEach(id => el[id].addEventListener('input', sync));
+    document.getElementById('btn').addEventListener('click', calc);
+    window.addEventListener('DOMContentLoaded', () => { sync(); calc(); });
 </script>
 </body>
 </html>
