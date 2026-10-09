@@ -1,191 +1,452 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>本格FIREシミュレーター</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>次世代本格FIREシミュレーター</title>
     <style>
-        body { font-family:sans-serif; background:#f1f5f9; color:#1e293b; padding:15px; margin:0; font-size:13px; }
-        .card { background:#fff; border-radius:12px; padding:12px; box-shadow:0 4px 6px rgba(0,0,0,0.05); margin-bottom:15px; }
-        .row { margin-bottom:10px; }
-        .lbl-wp { display:flex; justify-content:space-between; font-weight:bold; font-size:0.85rem; }
-        input[type="range"] { width:100%; height:6px; background:#e2e8f0; border-radius:3px; outline:none; -webkit-appearance:none; }
-        input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:#2563eb; cursor:pointer; }
-        .btn { width:100%; color:#fff; border:none; padding:12px; font-size:0.9rem; font-weight:bold; border-radius:8px; cursor:pointer; margin-bottom:10px; }
-        table { width:100%; border-collapse:collapse; text-align:right; font-size:0.8rem; min-width:480px; }
-        th, td { padding:6px 8px; border-bottom:1px solid #e2e8f0; } th { background:#f8fafc; color:#475569; }
-        .tab-wp { display:flex; border-bottom:2px solid #e2e8f0; margin-bottom:15px; }
-        .tab-btn { flex:1; padding:10px; background:none; border:none; font-size:0.95rem; font-weight:bold; color:#64748b; cursor:pointer; text-align:center; }
-        .tab-btn.active { color:#2563eb; border-bottom:2px solid #2563eb; margin-bottom:-2px; }
-        .tab-content { display:none; } .tab-content.active { display:block; }
-        .qa-item { border-bottom:1px solid #e2e8f0; padding:10px 0; }
-        .qa-q { font-weight:bold; color:#2563eb; cursor:pointer; display:flex; justify-content:space-between; align-items:center; }
-        .qa-q::after { content:'▼'; font-size:0.7rem; color:#64748b; transition:transform 0.2s; }
-        .qa-item.open .qa-q::after { transform:rotate(180deg); }
-        .qa-a { display:none; padding-top:8px; color:#475569; line-height:1.5; white-space:pre-wrap; }
-        .qa-item.open .qa-a { display:block; }
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success: #10b981;
+            --danger: #ef4444;
+            --bg: #f1f5f9;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; font-size: 13px; line-height: 1.5; }
+        .container { max-width: 650px; margin: 0 auto; }
+        h1 { text-align: center; color: var(--primary); font-size: 1.5rem; margin: 10px 0 20px; }
+        
+        /* サマリーファースト表示 */
+        .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
+        .summary-card { background: var(--card-bg); border-radius: 10px; padding: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); border-left: 4px solid var(--primary); }
+        .summary-card.alert { border-left-color: var(--danger); }
+        .summary-card.success { border-left-color: var(--success); }
+        .summary-title { font-size: 0.75rem; color: var(--text-sub); font-weight: bold; }
+        .summary-value { font-size: 1.1rem; font-weight: bold; margin-top: 4px; }
+
+        .card { background: var(--card-bg); border-radius: 12px; padding: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        .row { margin-bottom: 14px; }
+        .row:last-child { margin-bottom: 0; }
+        
+        /* UX改善: ラベルと数値入力・スライダーの連動 */
+        .lbl-wp { display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 0.85rem; margin-bottom: 4px; }
+        .input-num-wp { display: flex; align-items: center; gap: 4px; }
+        .num-input { width: 75px; padding: 2px 6px; font-size: 0.85rem; border: 1px solid var(--border); border-radius: 4px; text-align: right; font-weight: bold; color: var(--primary); }
+        .unit { font-size: 0.8rem; color: var(--text-sub); }
+        
+        input[type="range"] { width: 100%; height: 6px; background: var(--border); border-radius: 3px; outline: none; -webkit-appearance: none; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--primary); cursor: pointer; transition: transform 0.1s; }
+        input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.1); }
+        
+        .btn-group { display: flex; gap: 10px; margin-bottom: 15px; }
+        .btn { flex: 1; color: #fff; border: none; padding: 12px; font-size: 0.9rem; font-weight: bold; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
+        .btn-primary { background: var(--primary); } .btn-primary:hover { background: var(--primary-hover); }
+        .btn-success { background: var(--success); } .btn-success:hover { background: #059669; }
+        
+        .alert-box { border-radius: 10px; padding: 12px; text-align: center; font-weight: bold; display: none; margin-bottom: 15px; }
+        .alert-info { background: #eff6ff; border: 2px solid #bfdbfe; color: #1e40af; }
+        .alert-warn { background: #fef2f2; border: 2px solid #fecaca; color: #991b1b; }
+
+        table { width: 100%; border-collapse: collapse; text-align: right; font-size: 0.8rem; min-width: 500px; }
+        th, td { padding: 8px; border-bottom: 1px solid var(--border); } 
+        th { background: #f8fafc; color: var(--text-sub); position: sticky; top: 0; }
+        
+        .tab-wp { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 15px; }
+        .tab-btn { flex: 1; padding: 10px; background: none; border: none; font-size: 0.95rem; font-weight: bold; color: var(--text-sub); cursor: pointer; text-align: center; }
+        .tab-btn.active { color: var(--primary); border-bottom: 2px solid var(--primary); margin-bottom: -2px; }
+        .tab-content { display: none; } .tab-content.active { display: block; }
+        
+        .qa-item { border-bottom: 1px solid var(--border); padding: 10px 0; }
+        .qa-q { font-weight: bold; color: var(--primary); cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .qa-q::after { content: '▼'; font-size: 0.7rem; color: var(--text-sub); transition: transform 0.2s; }
+        .qa-item.open .qa-q::after { transform: rotate(180deg); }
+        .qa-a { display: none; padding-top: 8px; color: var(--text-sub); line-height: 1.5; white-space: pre-wrap; }
+        .qa-item.open .qa-a { display: block; }
+        
+        .help-text { font-size: 0.75rem; color: var(--text-sub); margin-top: 2px; }
     </style>
 </head>
 <body>
-<div style="max-width:600px; margin:0 auto;">
-    <h1 style="text-align:center; color:#2563eb; font-size:1.4rem; margin:10px 0;">🔥 FIREシミュレーター</h1>
+<div class="container">
+    <h1>🔥 次世代本格 FIREシミュレーター</h1>
+    
+    <!-- サマリーファースト表示エリア -->
+    <div class="summary-grid">
+        <div class="summary-card" id="card-lifespan">
+            <div class="summary-title">資産寿命 / 状態</div>
+            <div class="summary-value" id="sum-lifespan">---</div>
+        </div>
+        <div class="summary-card" id="card-reverse">
+            <div class="summary-title">逆算：必要最低リタイア年齢</div>
+            <div class="summary-value" id="sum-reverse">---</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-title">90歳時点の総資産</div>
+            <div class="summary-value" id="sum-90">---</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-title">100歳時点の総資産</div>
+            <div class="summary-value" id="sum-100">---</div>
+        </div>
+    </div>
+
     <div class="tab-wp">
         <button class="tab-btn active" onclick="switchTab('sim-tab')">シミュレーター</button>
         <button class="tab-btn" onclick="switchTab('qa-tab')">計算ロジックQA</button>
     </div>
+
     <div id="sim-tab" class="tab-content active">
         <div class="card">
-            <div style="font-weight:bold; margin-bottom:5px; color:#475569;">▼ 住居区分の選択</div>
-            <div style="display:flex; gap:15px; margin-bottom:5px; font-weight:bold;">
+            <div style="font-weight:bold; margin-bottom:8px; color:var(--text-sub);">▼ 住居区分の選択</div>
+            <div style="display:flex; gap:15px; font-weight:bold;">
                 <label><input type="radio" name="hType" value="loan" checked style="width:auto; -webkit-appearance:auto;"> ローンあり</label>
                 <label><input type="radio" name="hType" value="rent" style="width:auto; -webkit-appearance:auto;"> 賃貸・その他</label>
             </div>
         </div>
-        <div class="card" id="inputs"></div>
-        <div style="display:flex; gap:10px;">
-            <button id="btn" class="btn" style="background:#2563eb;">結果を計算する</button>
-            <button id="backBtn" class="btn" style="background:#10b981;">必要労働年数を逆算</button>
+
+        <div class="card" id="inputs-container"></div>
+
+        <div class="btn-group">
+            <button id="calcBtn" class="btn btn-primary">結果を再計算する</button>
+            <button id="backBtn" class="btn btn-success">必要労働年数を逆算</button>
         </div>
-        <div id="gRes" style="background:#eff6ff; border:2px solid #bfdbfe; color:#1e40af; border-radius:10px; padding:12px; text-align:center; font-weight:bold; display:none; margin-bottom:15px;"></div>
+
+        <div id="gRes" class="alert-box alert-info"></div>
+
         <div class="card">
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; font-weight:bold;" id="sums"></div>
-            <div style="overflow-x:auto;"><table><thead><tr><th style="text-align:center;">年齢</th><th>総資産</th><th>運用資産</th><th>現金枠</th><th>生活費</th><th style="color:#ef4444;">引かれた税金</th></tr></thead><tbody id="tb"></tbody></table></div>
+            <div style="overflow-x:auto; max-height:450px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="text-align:center;">年齢</th>
+                            <th>総資産</th>
+                            <th>運用資産</th>
+                            <th>現金・iDeCo</th>
+                            <th>年間生活費</th>
+                            <th style="color:var(--danger);">年間税金</th>
+                            <th>状態</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tb"></tbody>
+                </table>
+            </div>
         </div>
     </div>
+
     <div id="qa-tab" class="tab-content">
         <div class="card" id="qa-list"></div>
     </div>
 </div>
-<!-- 【前半のコピーはココまで】次のメッセージで後半（プログラム部分）を送ります -->
+
 <script>
 const CONFIG = [
-    {id:'cA', name:'現在の年齢', min:20, max:65, val:35, u:'歳'}, {id:'rA', name:'リタイア年齢', min:25, max:70, val:50, u:'歳'},
-    {id:'inc', name:'現在の年収 (額面)', min:200, max:2000, step:50, val:600, m:true},
-    {id:'ivA', name:'運用資産 (現時点)', min:0, max:20000, step:500, val:2000, m:true},
-    {id:'csA', name:'現金保有 (現時点)', min:0, max:10000, step:100, val:1000, m:true},
-    {id:'idc', name:'現在のiDeCo残高', min:0, max:3000, step:50, val:300, m:true},
-    {id:'yld', name:'運用利回り', min:0, max:15, step:0.1, val:4.0, p:true}, {id:'inf', name:'インフレ率', min:0, max:10, step:0.1, val:2.0, p:true},
-    {id:'cB6', name:'60歳前の年間生活費 (住居除く)', min:100, max:1000, step:10, val:300, m:true},
-    {id:'cA6', name:'60歳以降の年間生活費 (住居除く)', min:100, max:1000, step:10, val:200, m:true},
-    {id:'lBal', name:'住宅ローン残高', min:0, max:8000, step:100, val:3000, m:true, g:'loan'},
-    {id:'lPay', name:'住宅ローンの年間返済額', min:0, max:400, step:5, val:120, m:true, g:'loan'},
-    {id:'lRat', name:'住宅ローン金利', min:0, max:5, step:0.05, val:0.5, p:true, g:'loan'},
-    {id:'rMon', name:'家賃月額', min:0, max:40, step:1, val:10, m:true, g:'rent'},
-    {id:'pen', name:'年金 (65歳基準・年額)', min:0, max:400, step:10, val:150, m:true}, {id:'pA', name:'年金受給開始年齢', min:60, max:75, val:65, u:'歳'}
+    {id:'cA', name:'現在の年齢', min:20, max:65, val:35, u:'歳', help:'シミュレーションを開始する年齢'},
+    {id:'rA', name:'リタイア年齢', min:25, max:70, val:50, u:'歳', help:'労働を完全に辞めてFIRE生活に入る年齢'},
+    {id:'inc', name:'現在の年収 (額面)', min:200, max:2000, step:50, val:600, m:true, help:'現役時代の税引前年収'},
+    {id:'ivA', name:'運用資産 (現時点)', min:0, max:20000, step:100, val:2000, m:true, help:'株・投資信託などの時価総額'},
+    {id:'csA', name:'現金保有 (現時点)', min:0, max:10000, step:100, val:1000, m:true, help:'預貯金などの手元資金'},
+    {id:'idc', name:'現在のiDeCo残高', min:0, max:3000, step:50, val:300, m:true, help:'60歳までロックされる老舗積立金'},
+    {id:'yld', name:'運用利回り (実質)', min:0, max:15, step:0.1, val:4.0, p:true, help:'インフレ調整後の期待運用リターン'},
+    {id:'inf', name:'インフレ率', min:0, max:10, step:0.1, val:2.0, p:true, help:'物価上昇による生活費・家賃への影響'},
+    {id:'cB6', name:'60歳前の年間生活費 (住居除く)', min:100, max:1000, step:10, val:300, m:true, help:'住居費を除いた年間ベース支出'},
+    {id:'cA6', name:'60歳以降の年間生活費 (住居除く)', min:100, max:1000, step:10, val:200, m:true, help:'リタイア後・高齢期の生活費'},
+    {id:'lBal', name:'住宅ローン残高', min:0, max:8000, step:100, val:3000, m:true, g:'loan', help:'現在の住宅ローン借入残高'},
+    {id:'lPay', name:'住宅ローンの年間返済額', min:0, max:400, step:5, val:120, m:true, g:'loan', help:'年間で返済する総額（元利合計）'},
+    {id:'lRat', name:'住宅ローン金利', min:0, max:5, step:0.05, val:0.5, p:true, g:'loan', help:'ローン適用金利'},
+    {id:'rMon', name:'家賃月額', min:0, max:40, step:1, val:10, m:true, g:'rent', help:'毎月の賃料（インフレ連動）'},
+    {id:'pen', name:'受給年金 (年額)', min:0, max:400, step:10, val:150, m:true, help:'65歳基準の受給額（マクロ経済スライド考慮）'},
+    {id:'pA', name:'年金受給開始年齢', min:60, max:75, val:65, u:'歳', help:'繰り上げ・繰り下げを反映'}
 ];
+
 const QAS = [
-    {q:"Q1. 右端の「引かれた税金」とは？", a:"現役時代の給与天引き(所得税等20%枠)と、リタイア後の運用益にかかる日本の「20.315%の取り崩し課税」を正確に自動計算したリアルな税金額です。"},
-    {q:"Q2. 現役時代の積立ロジックは？", a:"額面年収から一律20%を税金として引き算した「本当の手取り額」から「生活費」を引いたリアルな黒字分だけが運用資産に自動で積立(買い増し)されます。"},
-    {q:"Q3. FIRE後のアセット取り崩しの優先順位は？", a:"利回りがかかる「運用資産」から最優先で日々の生活費を取り崩します。運用資産枠が完全に0円になって初めて、非課税の「現金保有枠」の切り崩しに移行します。"},
-    {q:"Q4. 住宅ローンと賃貸の計算の違いは？", a:"【ローン】金利を元に毎年残高を減らし、残高0で完済すると自動的に毎年の生活費からローン返済分が消えて負担が軽くなります。\n【賃貸】家賃がインフレ率に応じて生涯値上がりし続けます。"},
-    {q:"Q5. iDeCoや年金の合流タイミングは？", a:"iDeCoは60歳に達した瞬間に全額が現金枠へ一括でスライド統合されます。受給年齢以降の年金額も、自動で現金枠に毎年の生活費補填として合算されます。"}
+    {q:"Q1. 資産枯渇判定のタイミングは？", a:"その年の給与・生活費・運用益・税金の計算がすべて終わった「年末時点」の総資産で判定しています。途中で資金がマイナスになった場合は隠さず「資金ショート」として検知します。"},
+    {q:"Q2. 売却時の税金（キャピタルゲイン課税）の計算は？", a:"運用資産の『時価』と『累計投資元本』を別々に追跡しています。取り崩し時には売却額に占める利益の割合を正確に計算し、利益部分に対して一律20.315%の課税を行っています。"},
+    {q:"Q3. 現役時代の積立ロジックは？", a:"額面年収から一律20%（税金・社会保険料の簡易モデル）を引いた手取りから生活費を差し引き、黒字分を運用資産の元本と時価に同時に積み増します。"},
+    {q:"Q4. 住宅ローンと賃貸の計算の違いは？", a:"【ローンあり】金利を考慮して毎年残高を減らし、完済後は住居費負担がゼロになります。\n【賃貸】家賃がインフレ率に応じて毎年上昇し続けます。"},
+    {q:"Q5. iDeCoと年金の連動について", a:"iDeCoは60歳に達した瞬間に全額が現金・預金枠へ自動合算されます。公的年金は受給開始年齢から毎年収入にプラスされ、繰り上げ・繰り下げによる増減率（月±0.4%〜0.7%）も自動反映されます。"}
 ];
-const inpCont = document.getElementById('inputs');
-CONFIG.forEach(c => { inpCont.innerHTML += `<div class="row" id="row_${c.id}"><div class="lbl-wp"><label for="${c.id}">${c.name}</label><span><span id="${c.id}V">-</span></span></div><input type="range" id="${c.id}" min="${c.min}" max="${c.max}" step="${c.step||1}" value="${c.val}"></div>`; });
-const sumCont = document.getElementById('sums');
-const summaryKeys = String("60,70,90,risk").split(",");
-summaryKeys.forEach(k => { sumCont.innerHTML += `<div style="background:#f8fafc; padding:8px; border-radius:6px; border:1px solid #e2e8f0;"><div style="font-size:0.75rem; color:#64748b;">${k==='risk'?'資産寿命':k+'歳総資産'}</div><div id="o${k}" style="font-size:0.95rem;">---</div></div>`; });
+
+// DOM生成と双方向バインディングの構築
+const inpCont = document.getElementById('inputs-container');
+CONFIG.forEach(c => {
+    inpCont.innerHTML += `
+        <div class="row" id="row_${c.id}">
+            <div class="lbl-wp">
+                <label for="${c.id}">${c.name}</label>
+                <div class="input-num-wp">
+                    <input type="number" id="${c.id}_num" class="num-input" min="${c.min}" max="${c.max}" step="${c.step||1}" value="${c.val}">
+                    <span class="unit" id="${c.id}_unit">${c.m ? '万円' : c.p ? '%' : c.u}</span>
+                </div>
+            </div>
+            <input type="range" id="${c.id}" min="${c.min}" max="${c.max}" step="${c.step||1}" value="${c.val}">
+            ${c.help ? `<div class="help-text">${c.help}</div>` : ''}
+        </div>`;
+});
+
 const qaCont = document.getElementById('qa-list');
 QAS.forEach(qa => { qaCont.innerHTML += `<div class="qa-item"><div class="qa-q" onclick="toggleQA(this)">${qa.q}</div><div class="qa-a">${qa.a}</div></div>`; });
-const el = {}, disp = {}; CONFIG.forEach(c => { el[c.id] = document.getElementById(c.id); disp[c.id] = document.getElementById(c.id+'V'); });
-const out = { 60: document.getElementById('o60'), 70: document.getElementById('o70'), 90: document.getElementById('o90'), risk: document.getElementById('orisk') };
-const tb = document.getElementById('tb'), gRes = document.getElementById('gRes');
-function fmt(n) {
-    if (n <= 0) return "0円";
-    if (n >= 10000) { const o = Math.floor(n / 10000), r = n % 10000; return r > 0 ? `${o}億${r}万円` : `${o}億円`; }
-    return `${n}万円`;
-}
-function fmtT(y) { return y <= 0 ? "0万円" : Math.round(y / 10000).toLocaleString() + "万円"; }
+
+const el = {}, numEl = {};
+CONFIG.forEach(c => {
+    el[c.id] = document.getElementById(c.id);
+    numEl[c.id] = document.getElementById(c.id + '_num');
+});
+
+// 双方向同期イベント
+CONFIG.forEach(c => {
+    el[c.id].addEventListener('input', () => { numEl[c.id].value = el[c.id].value; triggerCalc(); });
+    numEl[c.id].addEventListener('input', () => { 
+        let v = parseFloat(numEl[c.id].value);
+        if(!isNaN(v)) { el[c.id].value = v; triggerCalc(); }
+    });
+});
+
 function toggleHousing() {
     const type = document.querySelector('input[name="hType"]:checked').value;
     CONFIG.forEach(c => { if (c.g) document.getElementById('row_' + c.id).style.display = (c.g === type) ? 'block' : 'none'; });
 }
+
 function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('active'));
-    document.getElementById(tabId).classList.add('active'); event.currentTarget.classList.add('active');
+    document.getElementById(tabId).classList.add('active');
+    event.currentTarget.classList.add('active');
 }
+
 function toggleQA(e) { e.parentElement.classList.toggle('open'); }
-function sync() {
-    if (parseInt(el.rA.value) < parseInt(el.cA.value)) el.rA.value = el.cA.value;
-    CONFIG.forEach(c => {
-        let v = parseFloat(el[c.id].value);
-        if (c.m) disp[c.id].textContent = (c.id === 'rMon') ? v + "万 (年" + (v*12) + "万)" : fmt(v);
-        else if (c.p || c.id === 'lRat') disp[c.id].textContent = v.toFixed(c.id==='lRat'?2:1) + "%";
-        else disp[c.id].textContent = v + c.u;
-    });
+
+function fmt(n) {
+    if (n <= 0) return "0円";
+    if (n >= 10000) { const o = Math.floor(n / 10000), r = n % 10000; return r > 0 ? `${o}億${r.toLocaleString()}万円` : `${o}億円`; }
+    return `${Math.round(n).toLocaleString()}万円`;
 }
+
+/**
+ * 厳密な1年ごとのシミュレーション計算エンジン（純粋関数）
+ */
 function runCore(targetRA) {
     const cA = parseInt(el.cA.value), pA = parseInt(el.pA.value);
-    const inc = parseFloat(el.inc.value)*10000, cB = parseFloat(el.cB6.value)*10000, cA6 = parseFloat(el.cA6.value)*10000;
-    let inv = parseFloat(el.ivA.value)*10000, cash = parseFloat(el.csA.value)*10000, idc = parseFloat(el.idc.value)*10000;
-    const r = parseFloat(el.yld.value)/100, inf = parseFloat(el.inf.value)/100, pB = parseFloat(el.pen.value)*10000;
+    const inc = parseFloat(el.inc.value)*10000;
+    const cB = parseFloat(el.cB6.value)*10000, cA6 = parseFloat(el.cA6.value)*10000;
+    
+    let inv = parseFloat(el.ivA.value)*10000;
+    let cash = parseFloat(el.csA.value)*10000;
+    let idc = parseFloat(el.idc.value)*10000;
+    let totalPrincipal = inv; // 含み益計算用の取得原価追跡
+    
+    const r = parseFloat(el.yld.value)/100;
+    const inf = parseFloat(el.inf.value)/100;
+    const pB = parseFloat(el.pen.value)*10000;
+    
     const hType = document.querySelector('input[name="hType"]:checked').value;
-    let currLoan = parseFloat(el.lBal.value)*10000, lPay = parseFloat(el.lPay.value)*10000, lRat = parseFloat(el.lRat.value)/100, rAnn = parseFloat(el.rMon.value)*12*10000;
-    let totalPrincipal = inv; let pR = 1.0; if(pA < 65) pR -= (65 - pA)*12*0.004; else if(pA > 65) pR += (pA - 65)*12*0.007;
-    const pension = pB * pR; let die = 0, results = [];
+    let currLoan = parseFloat(el.lBal.value)*10000;
+    let lPay = parseFloat(el.lPay.value)*10000;
+    let lRat = parseFloat(el.lRat.value)/100;
+    let rAnn = parseFloat(el.rMon.value)*12*10000;
+    
+    // 年金受給額の調整（65歳基準 ± 毎月0.4%~0.7%）
+    let pR = 1.0;
+    if(pA < 65) pR -= (65 - pA) * 12 * 0.004;
+    else if(pA > 65) pR += (pA - 65) * 12 * 0.007;
+    const pension = pB * Math.max(0.5, pR);
+    
+    let results = [];
+    let bankruptedAge = 0;
+
     for (let a = cA; a <= 100; a++) {
-        let taxIncurred = 0; if (a === 60) { cash += idc; idc = 0; }
-        let baseCost = ((a < 60) ? cB : cA6) * Math.pow(1 + inf, a - cA), hCost = 0;
-        if (hType === 'loan') {
-            if (currLoan > 0) { hCost = lPay; let pPaid = lPay - (currLoan * lRat); currLoan -= (pPaid > 0 ? pPaid : 0); if (currLoan < 0) currLoan = 0; }
-        } else { hCost = rAnn * Math.pow(1 + inf, a - cA); }
-        let cost = baseCost + hCost, tot = inv + cash + idc; if (tot <= 0 && die === 0) die = a;
-        if (a < targetRA) {
-            let tax = inc * 0.2; taxIncurred = tax; let s = (inc - tax) - cost;
-            if (s > 0) { inv += s; totalPrincipal += s; } else cash += s;
-            inv *= (1 + r); if (a < 60) idc *= (1 + r);
-        } else {
-            if (a >= pA) cash += pension;
-            if (inv >= cost) {
-                let profitRatio = Math.max(0, (inv - totalPrincipal) / inv);
-                let taxOnProfit = cost * profitRatio * 0.20315;
-                taxIncurred = taxOnProfit; inv -= (cost + taxOnProfit);
-            } else {
-                let rem = cost - inv;
-                if (inv > 0) {
-                    let profitRatio = Math.max(0, (inv - totalPrincipal) / inv);
-                    let taxOnProfit = inv * profitRatio * 0.20315;
-                    taxIncurred = taxOnProfit; inv = 0; cash -= (rem + taxOnProfit);
-                } else { cash -= rem; }
-            }
-            if (inv > 0) inv *= (1 + r); if (cash < 0) cash = 0; if (a < 60) idc *= (1 + r);
+        let taxIncurred = 0;
+        let shortage = 0;
+        
+        // 1. 60歳到達時のiDeCo合流
+        if (a === 60) {
+            cash += idc;
+            idc = 0;
         }
-        results.push({a, tot, inv, cash, idc, cost, taxIncurred});
+        
+        // 2. 基礎生活費と住居費のインフレ換算
+        let baseCost = ((a < 60) ? cB : cA6) * Math.pow(1 + inf, a - cA);
+        let hCost = 0;
+        if (hType === 'loan') {
+            if (currLoan > 0) {
+                let interest = currLoan * lRat;
+                let principalPaid = lPay - interest;
+                currLoan -= Math.max(0, principalPaid);
+                if (currLoan < 0) currLoan = 0;
+                hCost = lPay;
+            }
+        } else {
+            hCost = rAnn * Math.pow(1 + inf, a - cA);
+        }
+        let totalCost = baseCost + hCost;
+        
+        // 3. 現役時代 vs リタイア後 の分岐
+        if (a < targetRA) {
+            // 現役時代：給与収入から税金（一律20%モデル）を引いて積立
+            let tax = inc * 0.2;
+            taxIncurred = tax;
+            let savings = (inc - tax) - totalCost;
+            if (savings >= 0) {
+                inv += savings;
+                totalPrincipal += savings; // 元本追加
+            } else {
+                cash += savings; // マイナス分は現金から補填
+            }
+            inv *= (1 + r);
+            if (a < 60) idc *= (1 + r);
+        } else {
+            // リタイア後：年金収入加算 ＆ 運用資産からの取り崩し
+            if (a >= pA) cash += pension;
+            
+            let needed = totalCost;
+            if (inv > 0) {
+                let profitRatio = Math.max(0, (inv - totalPrincipal) / inv);
+                let taxablePartRatio = profitRatio * 0.20315;
+                let grossWithdrawal = needed / (1 - taxablePartRatio);
+                
+                if (grossWithdrawal <= inv) {
+                    let taxOnProfit = grossWithdrawal * profitRatio * 0.20315;
+                    taxIncurred = taxOnProfit;
+                    let withdrawnPrincipal = grossWithdrawal * (1 - profitRatio);
+                    
+                    inv -= grossWithdrawal;
+                    totalPrincipal = Math.max(0, totalPrincipal - withdrawnPrincipal);
+                } else {
+                    // 運用資産を全額売却しても足りない場合
+                    let profitOnAll = inv * profitRatio * 0.20315;
+                    taxIncurred = profitOnAll;
+                    let netFromInv = inv - profitOnAll;
+                    let remainingNeeded = needed - netFromInv;
+                    
+                    totalPrincipal = 0;
+                    inv = 0;
+                    cash -= remainingNeeded;
+                }
+            } else {
+                cash -= needed;
+            }
+            if (inv > 0) inv *= (1 + r);
+            if (a < 60) idc *= (1 + r);
+        }
+        
+        // 現金とiDeCoの合算総額
+        let totalCashAndIdc = cash + idc;
+        let tot = inv + totalCashAndIdc;
+        
+        // 年末時点での資産枯渇（赤字）判定
+        let isBankrupt = false;
+        if (tot < 0) {
+            shortage = Math.abs(tot);
+            isBankrupt = true;
+            if (bankruptedAge === 0) bankruptedAge = a;
+            tot = 0;
+            cash = 0;
+            inv = 0;
+        }
+        
+        results.push({ a, tot, inv, cashAndIdc: totalCashAndIdc, totalCost, taxIncurred, isBankrupt, shortage });
+        if (isBankrupt && a >= targetRA) {
+            // 破綻後はシミュレーション継続または停止を表現
+        }
     }
-    return { die, results };
+    return { bankruptedAge, results };
 }
+
 function calc() {
-    gRes.style.display = "none"; const rA = parseInt(el.rA.value), cA = parseInt(el.cA.value);
-    const { die, results } = runCore(rA); tb.innerHTML = "";
+    const rA = parseInt(el.rA.value), cA = parseInt(el.cA.value);
+    const { bankruptedAge, results } = runCore(rA);
+    
+    // テーブル描画
+    tb.innerHTML = "";
     results.forEach(d => {
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td style="text-align:center;font-weight:bold;">${d.a==rA?d.a+'歳🚀':d.a+'歳'}</td><td style="font-weight:bold;color:#2563eb;">${fmtT(d.tot)}</td><td>${fmtT(d.inv)}</td><td>${fmtT(d.cash+d.idc)}</td><td>${fmtT(d.cost)}</td><td style="color:#ef4444;font-weight:bold;">${d.taxIncurred>0?fmtT(d.taxIncurred):'-'}</td>`;
+        if(d.isBankrupt) tr.style.background = '#fef2f2';
+        tr.innerHTML = `
+            <td style="text-align:center; font-weight:bold;">${d.a === rA ? d.a + '歳 🚀' : d.a + '歳'}</td>
+            <td style="font-weight:bold; color:var(--primary);">${fmt(d.tot)}</td>
+            <td>${fmt(d.inv)}</td>
+            <td>${fmt(d.cashAndIdc)}</td>
+            <td>${fmt(d.totalCost)}</td>
+            <td style="color:var(--danger); font-weight:bold;">${d.taxIncurred > 0 ? fmt(d.taxIncurred) : '-'}</td>
+            <td style="font-weight:bold; color:${d.isBankrupt ? 'var(--danger)' : 'var(--success)'};">${d.isBankrupt ? '⚠️ 資金ショート' : '健全'}</td>`;
         tb.appendChild(tr);
     });
-    const targetAges = String("60,70,90").split(",");
-    targetAges.forEach(ageStr => {
-        const age = parseInt(ageStr); const d = results.find(x => x.a === age);
-        if (out[age]) out[age].textContent = d ? fmt(Math.round(d.tot / 10000)) : "---";
-        if (cA > age && out[age]) out[age].textContent = "対象外";
-    });
-    if (die > 0) { out.risk.textContent = `${die}歳` + "で枯渇"; out.risk.style.color = "#dc2626"; }
-    else { out.risk.textContent = "100歳クリア"; out.risk.style.color = "#16a34a"; }
+    
+    // サマリーカードの更新
+    const sumLifespan = document.getElementById('sum-lifespan');
+    const cardLifespan = document.getElementById('card-lifespan');
+    if (bankruptedAge > 0) {
+        sumLifespan.textContent = `${bankruptedAge}歳で枯渇`;
+        cardLifespan.className = "summary-card alert";
+    } else {
+        sumLifespan.textContent = "100歳クリア 🎉";
+        cardLifespan.className = "summary-card success";
+    }
+    
+    const getAssetAt = (age) => {
+        const found = results.find(x => x.a === age);
+        if (!found) return "対象外";
+        return found.a < cA ? "開始前" : fmt(found.tot);
+    };
+    
+    document.getElementById('sum-90').textContent = getAssetAt(90);
+    document.getElementById('sum-100').textContent = getAssetAt(100);
 }
+
 function reverseCalc() {
-    const cA = parseInt(el.cA.value); let targetAge = -1;
-    for (let checkRA = cA; checkRA <= 70; checkRA++) { if (runCore(checkRA).die === 0) { targetAge = checkRA; break; } }
+    const cA = parseInt(el.cA.value);
+    let targetAge = -1;
+    for (let checkRA = cA; checkRA <= 70; checkRA++) {
+        if (runCore(checkRA).bankruptedAge === 0) {
+            targetAge = checkRA;
+            break;
+        }
+    }
+    
+    const gRes = document.getElementById('gRes');
+    const sumReverse = document.getElementById('sum-reverse');
+    const cardReverse = document.getElementById('card-reverse');
+    
     gRes.style.display = "block";
-    if (targetAge === cA) gRes.innerHTML = "🎉 今すぐリタイアしても100歳まで資産が持ちます！";
-    else if (targetAge > cA) { gRes.innerHTML = `🎯 100歳まで生き残るには【最低 ${targetAge}歳】まで働く必要があります！`; el.rA.value = targetAge; }
-    else gRes.innerHTML = "⚠️ 70歳まで働いても100歳までに資産が枯渇する可能性があります。";
-    sync(); calc();
+    if (targetAge === cA) {
+        gRes.innerHTML = "🎉 今すぐリタイアしても100歳まで資産が持ちます！";
+        sumReverse.textContent = `${cA}歳 (今すぐ可)`;
+        cardReverse.className = "summary-card success";
+    } else if (targetAge > cA) {
+        gRes.innerHTML = `🎯 100歳まで資産を切らさないためには、**【最低 ${targetAge}歳】**まで働く必要があります。`;
+        sumReverse.textContent = `${targetAge}歳`;
+        cardReverse.className = "summary-card";
+        el.rA.value = targetAge;
+        numEl.rA.value = targetAge;
+    } else {
+        gRes.innerHTML = "⚠️ 70歳まで働いても100歳までに資産が枯渇する試算となります。支出や利回りの見直しが必要です。";
+        sumReverse.textContent = "70歳超え困難";
+        cardReverse.className = "summary-card alert";
+    }
+    calc();
 }
-CONFIG.forEach(c => el[c.id].addEventListener('input', sync));
-document.getElementsByName('hType').forEach(r => r.addEventListener('change', () => { toggleHousing(); sync(); calc(); }));
-document.getElementById('btn').addEventListener('click', calc);
+
+function triggerCalc() {
+    if (parseInt(el.rA.value) < parseInt(el.cA.value)) {
+        el.rA.value = el.cA.value;
+        numEl.rA.value = el.cA.value;
+    }
+    calc();
+}
+
+// イベントリスナー登録
+document.getElementById('calcBtn').addEventListener('click', calc);
 document.getElementById('backBtn').addEventListener('click', reverseCalc);
-window.addEventListener('DOMContentLoaded', () => { toggleHousing(); sync(); calc(); });
+document.getElementsByName('hType').forEach(r => r.addEventListener('change', () => { toggleHousing(); calc(); }));
+
+// 初期化実行
+window.addEventListener('DOMContentLoaded', () => {
+    toggleHousing();
+    calc();
+});
 </script>
 </body>
 </html>
-<!-- ★ココまでコピー★ -->
