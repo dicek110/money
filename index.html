@@ -3,269 +3,268 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FIRE Dashboard</title>
+    <title>FIREシミュレーション</title>
     <style>
+        :root {
+            --primary-color: #2563eb;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+        }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f1f5f9;
+            color: var(--text-color);
+            margin: 0;
             padding: 20px;
-            max-width: 600px;
+        }
+        .container {
+            max-width: 500px;
             margin: 0 auto;
-            color: #111;
         }
         h1 {
-            font-size: 2rem;
-            margin-bottom: 10px;
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 25px;
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
+            font-size: 1.8rem;
         }
-        .description {
-            font-size: 0.95rem;
-            color: #444;
-            margin-bottom: 25px;
-            line-height: 1.5;
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
         }
         .control-group {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
+        .control-group:last-of-type { margin-bottom: 0; }
         .label-wrapper {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 5px;
-            font-size: 1rem;
-        }
-        .slider-container {
-            display: flex;
             align-items: center;
-            gap: 10px;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        .value-display {
+            color: var(--primary-color);
+            font-size: 1.1rem;
         }
         input[type="range"] {
-            flex: 1;
+            width: 100%;
             height: 6px;
-            background: #cbd5e1;
+            background: var(--border-color);
             border-radius: 3px;
             outline: none;
+            -webkit-appearance: none;
         }
-        /* 実行ボタンのスタイリング */
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+        }
+        
+        /* 🚀 追加：実行ボタンのスタイリング */
         .btn-container {
-            margin: 25px 0;
-            text-align: center;
+            margin: 15px 0 25px 0;
         }
         .calc-btn {
-            background-color: #2196F3;
+            background-color: var(--primary-color);
             color: white;
             border: none;
-            padding: 12px 35px;
+            padding: 14px;
             font-size: 1.1rem;
             font-weight: bold;
-            border-radius: 8px;
+            border-radius: 12px;
             cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
             transition: background-color 0.2s, transform 0.1s;
             width: 100%;
         }
         .calc-btn:hover {
-            background-color: #1e88e5;
+            background-color: #1d4ed8;
         }
         .calc-btn:active {
-            transform: scale(0.98);
+            transform: scale(0.99);
         }
-        .result-section {
-            margin-top: 20px;
-            border-top: 2px solid #e2e8f0;
-            padding-top: 20px;
-        }
-        .result-group {
-            margin-bottom: 20px;
-        }
-        .result-label {
-            font-size: 1.1rem;
-            font-weight: 500;
-            margin-bottom: 5px;
+
+        .result-title {
+            font-size: 1rem;
+            color: #64748b;
+            margin-bottom: 8px;
         }
         .result-value {
-            font-size: 1.3rem;
-            font-weight: bold;
-            color: #000;
-            padding-left: 5px;
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            margin-bottom: 20px;
         }
-        .table-header-preview {
-            margin-top: 40px;
-            font-weight: bold;
-            font-size: 0.95rem;
+        .breakdown {
+            border-top: 1px solid var(--border-color);
+            padding-top: 15px;
+        }
+        .breakdown-item {
             display: flex;
-            gap: 12px;
-            color: #333;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 0.95rem;
         }
+        .breakdown-item:last-child { margin-bottom: 0; }
     </style>
 </head>
 <body>
 
-    <h1>🔥 FIRE Dashboard</h1>
-    <div class="description">
-        数値を動かして将来の資産をシミュレーション
-    </div>
+<div class="container">
+    <h1>🔥 FIREシミュレーション</h1>
+    
+    <!-- 入力カード -->
+    <div class="card">
+        <div class="control-group">
+            <div class="label-wrapper">
+                <label for="initAsset">現在の資産</label>
+                <span class="value-display"><span id="initAssetVal">500</span>万円</span>
+            </div>
+            <input type="range" id="initAsset" min="0" max="10000" step="100" value="500">
+        </div>
 
-    <!-- 入力スライドバー群 -->
-    <div class="control-group">
-        <div class="label-wrapper">
-            <span>運用資産: <span id="investAssetVal">13,000</span>万</span>
+        <div class="control-group">
+            <div class="label-wrapper">
+                <label for="monthlyInput">毎月の積立額</label>
+                <span class="value-display"><span id="monthlyInputVal">10</span>万円</span>
+            </div>
+            <input type="range" id="monthlyInput" min="0" max="100" step="1" value="10">
         </div>
-        <div class="slider-container">
-            <input type="range" id="investAsset" min="0" max="30000" step="500" value="13000">
-        </div>
-    </div>
 
-    <div class="control-group">
-        <div class="label-wrapper">
-            <span>現金保有: <span id="cashAssetVal">3,000</span>万</span>
+        <div class="control-group">
+            <div class="label-wrapper">
+                <label for="years">積立・運用期間</label>
+                <span class="value-display"><span id="yearsVal">7</span>年</span>
+            </div>
+            <input type="range" id="years" min="1" max="40" step="1" value="7">
         </div>
-        <div class="slider-container">
-            <input type="range" id="cashAsset" min="0" max="10000" step="100" value="3000">
-        </div>
-    </div>
 
-    <div class="control-group">
-        <div class="label-wrapper">
-            <span>運用利回り: <span id="yieldVal">4.0</span>%</span>
-        </div>
-        <div class="slider-container">
-            <input type="range" id="yield" min="0" max="15" step="0.1" value="4.0">
-        </div>
-    </div>
-
-    <div class="control-group">
-        <div class="label-wrapper">
-            <span>インフレ率: <span id="inflationVal">2.0</span>%</span>
-        </div>
-        <div class="slider-container">
-            <input type="range" id="inflation" min="0" max="10" step="0.1" value="2.0">
+        <div class="control-group">
+            <div class="label-wrapper">
+                <label for="yield">想定年利 (運用リターン)</label>
+                <span class="value-display"><span id="yieldVal">1.0</span>%</span>
+            </div>
+            <input type="range" id="yield" min="0" max="15" step="0.5" value="1.0">
         </div>
     </div>
 
-    <!-- ✨ 追加：実行ボタン -->
+    <!-- 🚀 追加：実行ボタン -->
     <div class="btn-container">
         <button id="calcBtn" class="calc-btn">シミュレーションを実行する</button>
     </div>
 
-    <!-- 結果出力群 -->
-    <div class="result-section">
-        <div class="result-group">
-            <div class="result-label">60歳総資産</div>
-            <div class="result-value" id="asset60">--- 円</div>
-        </div>
-
-        <div class="result-group">
-            <div class="result-label">70歳総資産</div>
-            <div class="result-value" id="asset70">--- 円</div>
-        </div>
-
-        <div class="result-group">
-            <div class="result-label">90歳総資産</div>
-            <div class="result-value" id="asset90">--- 円</div>
-        </div>
-
-        <div class="result-group">
-            <div class="result-label">枯渇リスク</div>
-            <div class="result-value" id="riskStatus">---</div>
+    <!-- 結果カード -->
+    <div class="card">
+        <div class="result-title">期間終了時の想定総資産</div>
+        <div class="result-value" id="totalAsset">--- 円</div>
+        
+        <div class="breakdown">
+            <div class="breakdown-item">
+                <span>投資元本総額:</span>
+                <span id="totalPrincipal">--- 円</span>
+            </div>
+            <div class="breakdown-item">
+                <span>運用利益（複利効果）:</span>
+                <span id="totalInterest" style="color: #10b981; font-weight: bold;">--- 円</span>
+            </div>
+            <div class="breakdown-item" style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border-color); flex-direction: column; gap: 4px;">
+                <span>4%ルールでの年間取崩し目安:</span>
+                <span id="fourPercentRule" style="font-weight: bold; color: var(--text-color);">---</span>
+            </div>
         </div>
     </div>
-
-    <!-- 画面最下部の項目プレビュー（将来拡張用） -->
-    <div class="table-header-preview">
-        <span>年齢</span> <span>生活費</span> <span>年金</span> <span>運用資産</span> <span>現金</span> <span>総資産</span>
-    </div>
+</div>
 
 <script>
-    // 1. 要素の取得
-    const sliders = {
-        invest: document.getElementById('investAsset'),
-        cash: document.getElementById('cashAsset'),
-        yield: document.getElementById('yield'),
-        inflation: document.getElementById('inflation')
+    // DOM要素の取得
+    const inputs = {
+        initAsset: document.getElementById('initAsset'),
+        monthlyInput: document.getElementById('monthlyInput'),
+        years: document.getElementById('years'),
+        yield: document.getElementById('yield')
     };
 
-    const labels = {
-        invest: document.getElementById('investAssetVal'),
-        cash: document.getElementById('cashAssetVal'),
-        yield: document.getElementById('yieldVal'),
-        inflation: document.getElementById('inflationVal')
-    };
-
-    const outputs = {
-        asset60: document.getElementById('asset60'),
-        asset70: document.getElementById('asset70'),
-        asset90: document.getElementById('asset90'),
-        risk: document.getElementById('riskStatus')
+    const displays = {
+        initAssetVal: document.getElementById('initAssetVal'),
+        monthlyInputVal: document.getElementById('monthlyInputVal'),
+        yearsVal: document.getElementById('yearsVal'),
+        yieldVal: document.getElementById('yieldVal'),
+        totalAsset: document.getElementById('totalAsset'),
+        totalPrincipal: document.getElementById('totalPrincipal'),
+        totalInterest: document.getElementById('totalInterest'),
+        fourPercentRule: document.getElementById('fourPercentRule')
     };
 
     const calcBtn = document.getElementById('calcBtn');
 
-    // 金額フォーマット関数
-    function formatOkuMan(yen) {
-        if (yen <= 0) return "0円";
-        const man = Math.round(yen / 10000);
-        if (man >= 10000) {
-            const oku = Math.floor(man / 10000);
-            const remainingMan = man % 10000;
-            return remainingMan > 0 ? `${oku}億${remainingMan.toLocaleString()}万円` : `${oku}億円`;
-        }
-        return `${man.toLocaleString()}万円`;
+    function formatCurrency(num) {
+        return Math.round(num).toLocaleString('ja-JP') + ' 円';
     }
 
-    // スライドバーの横にある「テキスト数値のみ」をリアルタイム更新する関数
+    // バーを動かした時に「上の青い数値テキストだけ」を更新する
     function updateLabelsOnly() {
-        labels.invest.textContent = parseFloat(sliders.invest.value).toLocaleString();
-        labels.cash.textContent = parseFloat(sliders.cash.value).toLocaleString();
-        labels.yield.textContent = parseFloat(sliders.yield.value).toFixed(1);
-        labels.inflation.textContent = parseFloat(sliders.inflation.value).toFixed(1);
+        displays.initAssetVal.textContent = parseInt(inputs.initAsset.value).toLocaleString();
+        displays.monthlyInputVal.textContent = inputs.monthlyInput.value;
+        displays.yearsVal.textContent = inputs.years.value;
+        
+        const yieldValue = parseFloat(inputs.yield.value);
+        displays.yieldVal.textContent = yieldValue === 0 ? "0.0" : yieldValue.toFixed(1);
     }
 
-    // ボタンを押した時に「計算を実行して下の数字を書き換える」関数
-    function runSimulation() {
-        const investVal = parseFloat(sliders.invest.value); 
-        const cashVal = parseFloat(sliders.cash.value);     
-        const yieldVal = parseFloat(sliders.yield.value);   
-        const inflationVal = parseFloat(sliders.inflation.value); 
+    // ボタンを押した時に実行される「計算＋下の結果反映」ロジック
+    function calculateFIRE() {
+        const initAsset = parseFloat(inputs.initAsset.value) * 10000;
+        const monthlyInput = parseFloat(inputs.monthlyInput.value) * 10000;
+        const years = parseInt(inputs.years.value);
+        const annualYield = parseFloat(inputs.yield.value) / 100;
 
-        // 簡易計算ロジック (60歳=10年後, 70歳=20年後, 90歳=40年後を想定)
-        const realRate = (yieldVal - inflationVal) / 100;
-        const startTotal = (investVal + cashVal) * 10000; 
+        let total = initAsset;
+        const monthlyYield = annualYield / 12;
+        const totalMonths = years * 12;
 
-        const total60 = startTotal * Math.pow(1 + realRate, 10);
-        const total70 = startTotal * Math.pow(1 + realRate, 20);
-        const total90 = startTotal * Math.pow(1 + realRate, 40);
-
-        // 結果画面の書き換え
-        outputs.asset60.textContent = formatOkuMan(total60);
-        outputs.asset70.textContent = formatOkuMan(total70);
-        outputs.asset90.textContent = formatOkuMan(total90);
-
-        // 枯渇リスク判定
-        if (total90 <= 0) {
-            outputs.risk.textContent = "⚠️ 高リスク（90歳までに枯渇の可能性）";
-            outputs.risk.style.color = "#dc2626";
-        } else if (total90 < startTotal * 0.5) {
-            outputs.risk.textContent = "⚡ 中リスク（資産が減少傾向）";
-            outputs.risk.style.color = "#d97706";
+        if (monthlyYield === 0) {
+            total = initAsset + (monthlyInput * totalMonths);
         } else {
-            outputs.risk.textContent = "✅ 低リスク（資産維持・安定）";
-            outputs.risk.style.color = "#16a34a";
+            for (let i = 0; i < totalMonths; i++) {
+                total = (total + monthlyInput) * (1 + monthlyYield);
+            }
         }
+
+        const totalPrincipal = initAsset + (monthlyInput * totalMonths);
+        const totalInterest = Math.max(0, total - totalPrincipal);
+        const fourPercent = total * 0.04;
+
+        // 下の結果カードの中身だけを更新
+        displays.totalAsset.textContent = formatCurrency(total);
+        displays.totalPrincipal.textContent = formatCurrency(totalPrincipal);
+        displays.totalInterest.textContent = formatCurrency(totalInterest);
+        displays.fourPercentRule.textContent = `${Math.round(fourPercent).toLocaleString()} 円（月額 約${Math.round(fourPercent / 12).toLocaleString()}円）`;
     }
 
-    // スライドバーを動かした時は、横の「◯◯万」「◯%」の数値テキストだけを動かす
-    Object.values(sliders).forEach(slider => {
-        if (slider) slider.addEventListener('input', updateLabelsOnly);
+    // スライドバー操作時は、横のテキスト数字だけを同期させる
+    Object.values(inputs).forEach(input => {
+        input.addEventListener('input', updateLabelsOnly);
     });
 
-    // 実行ボタンをクリックした時に初めてシミュレーションを走らせる
-    calcBtn.addEventListener('click', runSimulation);
+    // 🚀 ボタンをクリックしたタイミングでシミュレーション計算を実行
+    calcBtn.addEventListener('click', calculateFIRE);
 
-    // 最初の読み込み時：バーの数値の同期＋初期の計算結果を一度表示させておく
+    // 初期読み込み時：表示の同期と、最初の計算結果を一度出しておく
     window.addEventListener('DOMContentLoaded', () => {
         updateLabelsOnly();
-        runSimulation();
+        calculateFIRE();
     });
 </script>
 
