@@ -2,65 +2,55 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>本格FIREシミュレーター</title>
+    <title>FIRE</title>
     <style>
-        :root { --p: #2563eb; --s: #10b981; --bg: #f1f5f9; --txt: #1e293b; --b: #e2e8f0; }
-        body { font-family: sans-serif; background: var(--bg); color: var(--txt); padding:15px; margin:0; }
-        .container { max-width: 600px; margin: 0 auto; }
-        h1 { text-align: center; color: var(--p); font-size: 1.4rem; margin-bottom: 15px; }
-        .sec { font-size: 0.9rem; font-weight: bold; margin: 12px 0 4px 0; color: #475569; border-left: 4px solid var(--p); padding-left: 8px; }
-        .card { background: #fff; border-radius: 12px; padding: 14px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 15px; }
-        .row { margin-bottom: 12px; }
-        .lbl-wp { display: flex; justify-content: space-between; font-weight: bold; font-size: 0.85rem; margin-bottom: 2px; }
-        input[type="range"] { width: 100%; height: 6px; background: var(--b); border-radius: 3px; outline: none; -webkit-appearance: none; }
-        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--p); cursor: pointer; }
-        .btn-wp { display: flex; gap: 10px; margin-bottom: 15px; }
-        .btn { flex: 1; color: #fff; border: none; padding: 12px; font-size: 0.95rem; font-weight: bold; border-radius: 8px; cursor: pointer; }
-        #btn { background: var(--p); } #backBtn { background: var(--s); }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-        .res { background: #f8fafc; padding: 8px; border-radius: 6px; border: 1px solid var(--b); }
-        .r-lbl { font-size: 0.75rem; color: #64748b; }
-        .r-val { font-size: 0.95rem; font-weight: bold; }
-        .gyaku-card { background: #eff6ff; border: 2px solid #bfdbfe; color: #1e40af; border-radius: 10px; padding: 12px; text-align: center; font-weight: bold; font-size: 1rem; margin-bottom: 15px; display: none; }
-        .tbl-wp { width: 100%; overflow-x: auto; margin-top: 10px; }
-        table { width: 100%; border-collapse: collapse; text-align: right; font-size: 0.8rem; min-width: 450px; }
-        th, td { padding: 6px 8px; border-bottom: 1px solid var(--b); }
-        th { background: #f8fafc; color: #475569; font-weight: bold; }
+        :root { --p:#2563eb; --s:#10b981; --b:#e2e8f0; }
+        body { font-family:sans-serif; background:#f1f5f9; color:#1e293b; padding:15px; margin:0; }
+        .card { background:#fff; border-radius:12px; padding:14px; box-shadow:0 4px 6px rgba(0,0,0,0.05); margin-bottom:15px; }
+        .row { margin-bottom:10px; }
+        .lbl-wp { display:flex; justify-content:space-between; font-weight:bold; font-size:0.85rem; }
+        input[type="range"] { width:100%; height:6px; background:var(--b); border-radius:3px; outline:none; -webkit-appearance:none; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:var(--p); cursor:pointer; }
+        .btn-wp { display:flex; gap:10px; margin-bottom:15px; }
+        .btn { flex:1; color:#fff; border:none; padding:12px; font-size:0.9rem; font-weight:bold; border-radius:8px; cursor:pointer; }
+        #btn { background:var(--p); } #backBtn { background:var(--s); }
+        .grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
+        .res { background:#f8fafc; padding:8px; border-radius:6px; border:1px solid var(--b); }
+        .r-lbl { font-size:0.75rem; color:#64748b; } .r-val { font-size:0.95rem; font-weight:bold; }
+        .g-card { background:#eff6ff; border:2px solid #bfdbfe; color:#1e40af; border-radius:10px; padding:12px; text-align:center; font-weight:bold; display:none; margin-bottom:15px; }
+        .tbl-wp { width:100%; overflow-x:auto; margin-top:10px; }
+        table { width:100%; border-collapse:collapse; text-align:right; font-size:0.8rem; min-width:420px; }
+        th, td { padding:6px 8px; border-bottom:1px solid var(--b); } th { background:#f8fafc; color:#475569; }
     </style>
 </head>
 <body>
-<div class="container">
-    <h1>🔥 FIREシミュレーター</h1>
+<div style="max-width:600px; margin:0 auto;">
+    <h1 style="text-align:center; color:var(--p); font-size:1.4rem;">🔥 FIREシミュレーター</h1>
     <div class="card">
-        <div class="sec" style="margin-top:0;">基本情報</div>
         <div class="row"><div class="lbl-wp"><label for="cA">現在の年齢</label><span><span id="cAV">35</span>歳</span></div><input type="range" id="cA" min="20" max="65" value="35"></div>
         <div class="row"><div class="lbl-wp"><label for="rA">リタイア年齢</label><span><span id="rAV">50</span>歳</span></div><input type="range" id="rA" min="25" max="70" value="50"></div>
         <div class="row"><div class="lbl-wp"><label for="inc">現在の年収</label><span><span id="incV">-</span></span></div><input type="range" id="inc" min="200" max="2000" step="50" value="600"></div>
-        <div class="sec">初期資産（MAX 2億円）</div>
-        <div class="row"><div class="lbl-wp"><label for="ivA">運用資産</label><span><span id="ivAV">-</span></span></div><input type="range" id="ivA" min="0" max="20000" step="500" value="2000"></div>
-        <div class="row"><div class="lbl-wp"><label for="csA">現金保有</label><span><span id="csAV">-</span></span></div><input type="range" id="csA" min="0" max="10000" step="100" value="1000"></div>
+        <div class="row"><div class="lbl-wp"><label for="ivA">運用資産 (初期)</label><span><span id="ivAV">-</span></span></div><input type="range" id="ivA" min="0" max="20000" step="500" value="2000"></div>
+        <div class="row"><div class="lbl-wp"><label for="csA">現金保有 (初期)</label><span><span id="csAV">-</span></span></div><input type="range" id="csA" min="0" max="10000" step="100" value="1000"></div>
         <div class="row"><div class="lbl-wp"><label for="idc">現在のiDeCo残高</label><span><span id="idcV">-</span></span></div><input type="range" id="idc" min="0" max="3000" step="50" value="300"></div>
         <div class="row"><div class="lbl-wp"><label for="yld">運用利回り</label><span><span id="yldV">4.0</span>%</span></div><input type="range" id="yld" min="0" max="15" step="0.1" value="4.0"></div>
-        <div class="sec">生活費・年金</div>
         <div class="row"><div class="lbl-wp"><label for="cB6">60歳前の年間生活費</label><span><span id="cB6V">-</span></span></div><input type="range" id="cB6" min="100" max="1000" step="10" value="400"></div>
         <div class="row"><div class="lbl-wp"><label for="cA6">60歳以降の年間生活費</label><span><span id="cA6V">-</span></span></div><input type="range" id="cA6" min="100" max="1000" step="10" value="300"></div>
-        <div class="row"><div class="lbl-wp"><label for="pen">年金（65歳基準・年額）</label><span><span id="penV">-</span></span></div><input type="range" id="pen" min="0" max="400" step="10" value="150"></div>
+        <div class="row"><div class="lbl-wp"><label for="pen">年金 (65歳基準・年額)</label><span><span id="penV">-</span></span></div><input type="range" id="pen" min="0" max="400" step="10" value="150"></div>
         <div class="row"><div class="lbl-wp"><label for="pA">年金受給開始年齢</label><span><span id="pAV">65</span>歳</span></div><input type="range" id="pA" min="60" max="75" value="65"></div>
     </div>
     <div class="btn-wp">
         <button id="btn" class="btn">結果を計算する</button>
-        <button id="backBtn" class="btn">目標リタイア年齢を逆算</button>
+        <button id="backBtn" class="btn">必要労働年数を逆算</button>
     </div>
-    <div id="gRes" class="gyaku-card"></div>
+    <div id="gRes" class="g-card"></div>
     <div class="card">
-        <div class="sec" style="margin-top:0;">結果サマリー</div>
         <div class="grid">
             <div class="res"><div class="r-lbl">60歳総資産</div><div class="r-val" id="o60">---</div></div>
             <div class="res"><div class="r-lbl">70歳総資産</div><div class="r-val" id="o70">---</div></div>
             <div class="res"><div class="r-lbl">90歳総資産</div><div class="r-val" id="o90">---</div></div>
             <div class="res"><div class="r-lbl">資産寿命</div><div class="r-val" id="risk">---</div></div>
         </div>
-        <div class="sec">1年ごとの資産推移詳細</div>
         <div class="tbl-wp"><table><thead><tr><th style="text-align:center;">年齢</th><th>総資産</th><th>運用資産</th><th>現金枠</th><th>生活費</th></tr></thead><tbody id="tb"></tbody></table></div>
     </div>
 </div>
@@ -112,13 +102,13 @@
         const { die, results } = runCore(rA); tb.innerHTML = "";
         results.forEach(d => {
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td style="text-align:center;font-weight:bold;">${d.a==rA?d.a+'歳🚀':d.a+'歳'}</td><td style="font-weight:bold;color:var(--p);">${fmtT(d.tot)}</td><td>${fmtT(d.inv)}</td><td>${fmtT(d.cash+d.idc)}</td><td style="color: #475569;">${fmtT(d.cost)}</td>`;
+            tr.innerHTML = `<td style="text-align:center;font-weight:bold;">${d.a==rA?d.a+'歳🚀':d.a+'歳'}</td><td style="font-weight:bold;color:var(--p);">${fmtT(d.tot)}</td><td>${fmtT(d.inv)}</td><td>${fmtT(d.cash+d.idc)}</td><td>${fmtT(d.cost)}</td>`;
             tb.appendChild(tr);
         });
         [60, 70, 90].forEach(age => {
             const d = results.find(x => x.a === age);
-            out[age].textContent = d ? fmt(Math.round(d.tot / 10000)) : "---";
-            if (cA > age) out[age].textContent = "対象外";
+            if (out[age]) out[age].textContent = d ? fmt(Math.round(d.tot / 10000)) : "---";
+            if (cA > age && out[age]) out[age].textContent = "対象外";
         });
         if (die > 0) { out.risk.textContent = `${die}歳で枯渇`; out.risk.style.color = "#dc2626"; }
         else { out.risk.textContent = "100歳クリア"; out.risk.style.color = "#16a34a"; }
@@ -132,3 +122,13 @@
         if (targetAge === cA) { gRes.innerHTML = "🎉 今すぐリタイアしても100歳まで資産が持ちます！"; el.rA.value = cA; }
         else if (targetAge > cA) { gRes.innerHTML = `🎯 100歳まで生き残るには【最低 ${targetAge}歳】まで働く必要があります！`; el.rA.value = targetAge; }
         else { gRes.innerHTML = "⚠️ 70歳まで働いても100歳までに資産が枯渇する可能性があります。"; }
+        sync(); calc();
+    }
+    ids.forEach(id => el[id].addEventListener('input', sync));
+    document.getElementById('btn').addEventListener('click', calc);
+    document.getElementById('backBtn').addEventListener('click', reverseCalc);
+    window.addEventListener('DOMContentLoaded', () => { sync(); calc(); });
+</script>
+</body>
+</html>
+<!-- ★ココまでコピー★ -->
