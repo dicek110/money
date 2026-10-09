@@ -4,7 +4,7 @@
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>本格FIREシミュレーター</title>
     <style>
-        :root { --p: #2563eb; --bg: #f1f5f9; --txt: #1e293b; --b: #e2e8f0; }
+        :root { --p: #2563eb; --s: #10b981; --bg: #f1f5f9; --txt: #1e293b; --b: #e2e8f0; }
         body { font-family: sans-serif; background: var(--bg); color: var(--txt); padding:15px; margin:0; }
         .container { max-width: 600px; margin: 0 auto; }
         h1 { text-align: center; color: var(--p); font-size: 1.4rem; margin-bottom: 15px; }
@@ -14,11 +14,14 @@
         .lbl-wp { display: flex; justify-content: space-between; font-weight: bold; font-size: 0.85rem; margin-bottom: 2px; }
         input[type="range"] { width: 100%; height: 6px; background: var(--b); border-radius: 3px; outline: none; -webkit-appearance: none; }
         input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--p); cursor: pointer; }
-        .btn { background: var(--p); color: #fff; border: none; padding: 12px; font-size: 1rem; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; margin-bottom: 15px; }
+        .btn-wp { display: flex; gap: 10px; margin-bottom: 15px; }
+        .btn { flex: 1; color: #fff; border: none; padding: 12px; font-size: 0.95rem; font-weight: bold; border-radius: 8px; cursor: pointer; }
+        #btn { background: var(--p); } #backBtn { background: var(--s); }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
         .res { background: #f8fafc; padding: 8px; border-radius: 6px; border: 1px solid var(--b); }
         .r-lbl { font-size: 0.75rem; color: #64748b; }
         .r-val { font-size: 0.95rem; font-weight: bold; }
+        .gyaku-card { background: #eff6ff; border: 2px solid #bfdbfe; color: #1e40af; border-radius: 10px; padding: 12px; text-align: center; font-weight: bold; font-size: 1rem; margin-bottom: 15px; display: none; }
         .tbl-wp { width: 100%; overflow-x: auto; margin-top: 10px; }
         table { width: 100%; border-collapse: collapse; text-align: right; font-size: 0.8rem; min-width: 450px; }
         th, td { padding: 6px 8px; border-bottom: 1px solid var(--b); }
@@ -44,7 +47,16 @@
         <div class="row"><div class="lbl-wp"><label for="pen">年金（65歳基準・年額）</label><span><span id="penV">-</span></span></div><input type="range" id="pen" min="0" max="400" step="10" value="150"></div>
         <div class="row"><div class="lbl-wp"><label for="pA">年金受給開始年齢</label><span><span id="pAV">65</span>歳</span></div><input type="range" id="pA" min="60" max="75" value="65"></div>
     </div>
-    <button id="btn" class="btn">シミュレーションを実行する</button>
+    
+    <!-- 🎛 2つのボタン配置 -->
+    <div class="btn-wp">
+        <button id="btn" class="btn">結果を計算する</button>
+        <button id="backBtn" class="btn">目標リタイア年齢を逆算</button>
+    </div>
+
+    <!-- 📢 逆算結果メッセージ欄 -->
+    <div id="gyakuResult" class="gyaku-card"></div>
+
     <div class="card">
         <div class="sec" style="margin-top:0;">結果サマリー</div>
         <div class="grid">
@@ -66,7 +78,7 @@
     const ids = ['cA','rA','inc','ivA','csA','idc','yld','cB6','cA6','pen','pA'];
     const el = {}, disp = {}; ids.forEach(id => { el[id] = document.getElementById(id); disp[id] = document.getElementById(id+'V'); });
     const out = { 60: document.getElementById('o60'), 70: document.getElementById('o70'), 90: document.getElementById('o90'), risk: document.getElementById('risk') };
-    const tb = document.getElementById('tb');
+    const tb = document.getElementById('tb'), gyakuResult = document.getElementById('gyakuResult');
     function fmt(num) {
         if (num <= 0) return "0円";
         if (num >= 10000) { const o = Math.floor(num / 10000); const r = num % 10000; return r > 0 ? `${o}億${r}万円` : `${o}億円`; }
@@ -82,24 +94,19 @@
             else disp[id].textContent = fmt(v);
         });
     }
-    function calc() {
-        const cA = parseInt(el.cA.value), rA = parseInt(el.rA.value), pA = parseInt(el.pA.value);
+    function runCore(targetRA) {
+        const cA = parseInt(el.cA.value), pA = parseInt(el.pA.value);
         const inc = parseFloat(el.inc.value)*10000, cB = parseFloat(el.cB6.value)*10000, cA6 = parseFloat(el.cA6.value)*10000;
         let inv = parseFloat(el.ivA.value)*10000, cash = parseFloat(el.csA.value)*10000, idc = parseFloat(el.idc.value)*10000;
         const r = parseFloat(el.yld.value)/100, pB = parseFloat(el.pen.value)*10000;
         let pR = 1.0; if(pA < 65) pR -= (65 - pA)*12*0.004; else if(pA > 65) pR += (pA - 65)*12*0.007;
-        const pension = pB * pR; let die = 0; tb.innerHTML = "";
+        const pension = pB * pR; let die = 0; let results = [];
         for (let a = cA; a <= 100; a++) {
             if (a === 60) { cash += idc; idc = 0; }
             let tot = inv + cash + idc; let cost = (a < 60) ? cB : cA6;
-            if (a === 60) out[60].textContent = fmt(Math.round(tot/10000));
-            if (a === 70) out[70].textContent = fmt(Math.round(tot/10000));
-            if (a === 90) out[90].textContent = fmt(Math.round(tot/10000));
             if (tot <= 0 && die === 0) die = a;
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td style="text-align:center;font-weight:bold;">${a==rA?a+'歳🚀':a+'歳'}</td><td style="font-weight:bold;color:var(--p);">${fmtT(tot)}</td><td>${fmtT(inv)}</td><td>${fmtT(cash+idc)}</td><td style="color:#64748b;">${a<rA?'-':fmtT(cost)}</td>`;
-            tb.appendChild(tr);
-            if (a < rA) {
+            results.push({a, tot, inv, cash, idc, cost});
+            if (a < targetRA) {
                 let s = inc - cB; if (s > 0) inv += s; else cash += s;
                 inv *= (1 + r); if (a < 60) idc *= (1 + r);
             } else {
@@ -108,13 +115,24 @@
                 if (inv > 0) inv *= (1 + r); if (cash < 0) cash = 0; if (a < 60) idc *= (1 + r);
             }
         }
-        if (cA > 60) out[60].textContent = "対象外"; if (cA > 70) out[70].textContent = "対象外"; if (cA > 90) out[90].textContent = "対象外";
+        return { die, results };
+    }
+    function calc() {
+        gyakuResult.style.display = "none";
+        const rA = parseInt(el.rA.value), cA = parseInt(el.cA.value);
+        const { die, results } = runCore(rA); tb.innerHTML = "";
+        results.forEach(d => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td style="text-align:center;font-weight:bold;">${d.a==rA?d.a+'歳🚀':d.a+'歳'}</td><td style="font-weight:bold;color:var(--p);">${fmtT(d.tot)}</td><td>${fmtT(d.inv)}</td><td>${fmtT(d.cash+d.idc)}</td><td style="color:#64748b;">${d.a<rA?'-':fmtT(d.cost)}</td>`;
+            tb.appendChild(tr);
+        });
+        const finalTot = results[results.length-1].tot;
+        const tot60 = results.find(d => d.a===60)?.tot || 0, tot70 = results.find(d => d.a===70)?.tot || 0, tot90 = results.find(d => d.a===90)?.tot || 0;
+        out.textContent = fmt(Math.round(tot60/10000)); out.textContent = fmt(Math.round(tot70/10000)); out.textContent = fmt(Math.round(tot90/10000));
+        if (cA > 60) out.textContent = "対象外"; if (cA > 70) out.textContent = "対象外"; if (cA > 90) out.textContent = "対象外";
         if (die > 0) { out.risk.textContent = `${die}歳で枯渇`; out.risk.style.color = "#dc2626"; }
         else { out.risk.textContent = "100歳クリア"; out.risk.style.color = "#16a34a"; }
     }
-    ids.forEach(id => el[id].addEventListener('input', sync));
-    document.getElementById('btn').addEventListener('click', calc);
-    window.addEventListener('DOMContentLoaded', () => { sync(); calc(); });
-</script>
-</body>
-</html>
+    // 🚀 逆算ロジックの追加
+    function reverseCalc() {
+        const cA = parseInt(el.cA.value); let targetAge = -1;
