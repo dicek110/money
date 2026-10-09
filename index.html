@@ -4,130 +4,132 @@
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FIRE</title>
     <style>
-        :root { --p:#2563eb; --s:#10b981; --b:#e2e8f0; }
-        body { font-family:sans-serif; background:#f1f5f9; color:#1e293b; padding:15px; margin:0; }
-        .card { background:#fff; border-radius:12px; padding:14px; box-shadow:0 4px 6px rgba(0,0,0,0.05); margin-bottom:15px; }
+        body { font-family:sans-serif; background:#f1f5f9; color:#1e293b; padding:15px; margin:0; font-size:13px; }
+        .card { background:#fff; border-radius:12px; padding:12px; box-shadow:0 4px 6px rgba(0,0,0,0.05); margin-bottom:15px; }
         .row { margin-bottom:10px; }
         .lbl-wp { display:flex; justify-content:space-between; font-weight:bold; font-size:0.85rem; }
-        input[type="range"] { width:100%; height:6px; background:var(--b); border-radius:3px; outline:none; -webkit-appearance:none; }
-        input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:var(--p); cursor:pointer; }
-        .btn-wp { display:flex; gap:10px; margin-bottom:15px; }
-        .btn { flex:1; color:#fff; border:none; padding:12px; font-size:0.9rem; font-weight:bold; border-radius:8px; cursor:pointer; }
-        #btn { background:var(--p); } #backBtn { background:var(--s); }
-        .grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
-        .res { background:#f8fafc; padding:8px; border-radius:6px; border:1px solid var(--b); }
-        .r-lbl { font-size:0.75rem; color:#64748b; } .r-val { font-size:0.95rem; font-weight:bold; }
-        .g-card { background:#eff6ff; border:2px solid #bfdbfe; color:#1e40af; border-radius:10px; padding:12px; text-align:center; font-weight:bold; display:none; margin-bottom:15px; }
-        .tbl-wp { width:100%; overflow-x:auto; margin-top:10px; }
+        input { width:100%; height:6px; background:#e2e8f0; border-radius:3px; outline:none; -webkit-appearance:none; }
+        input::-webkit-slider-thumb { -webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:#2563eb; cursor:pointer; }
+        .btn { width:100%; color:#fff; border:none; padding:12px; font-size:0.9rem; font-weight:bold; border-radius:8px; cursor:pointer; margin-bottom:10px; }
         table { width:100%; border-collapse:collapse; text-align:right; font-size:0.8rem; min-width:420px; }
-        th, td { padding:6px 8px; border-bottom:1px solid var(--b); } th { background:#f8fafc; color:#475569; }
+        th, td { padding:6px 8px; border-bottom:1px solid #e2e8f0; } th { background:#f8fafc; color:#475569; }
     </style>
 </head>
 <body>
 <div style="max-width:600px; margin:0 auto;">
-    <h1 style="text-align:center; color:var(--p); font-size:1.4rem;">🔥 FIREシミュレーター</h1>
-    <div class="card">
-        <div class="row"><div class="lbl-wp"><label for="cA">現在の年齢</label><span><span id="cAV">35</span>歳</span></div><input type="range" id="cA" min="20" max="65" value="35"></div>
-        <div class="row"><div class="lbl-wp"><label for="rA">リタイア年齢</label><span><span id="rAV">50</span>歳</span></div><input type="range" id="rA" min="25" max="70" value="50"></div>
-        <div class="row"><div class="lbl-wp"><label for="inc">現在の年収</label><span><span id="incV">-</span></span></div><input type="range" id="inc" min="200" max="2000" step="50" value="600"></div>
-        <div class="row"><div class="lbl-wp"><label for="ivA">運用資産 (初期)</label><span><span id="ivAV">-</span></span></div><input type="range" id="ivA" min="0" max="20000" step="500" value="2000"></div>
-        <div class="row"><div class="lbl-wp"><label for="csA">現金保有 (初期)</label><span><span id="csAV">-</span></span></div><input type="range" id="csA" min="0" max="10000" step="100" value="1000"></div>
-        <div class="row"><div class="lbl-wp"><label for="idc">現在のiDeCo残高</label><span><span id="idcV">-</span></span></div><input type="range" id="idc" min="0" max="3000" step="50" value="300"></div>
-        <div class="row"><div class="lbl-wp"><label for="yld">運用利回り</label><span><span id="yldV">4.0</span>%</span></div><input type="range" id="yld" min="0" max="15" step="0.1" value="4.0"></div>
-        <div class="row"><div class="lbl-wp"><label for="cB6">60歳前の年間生活費</label><span><span id="cB6V">-</span></span></div><input type="range" id="cB6" min="100" max="1000" step="10" value="400"></div>
-        <div class="row"><div class="lbl-wp"><label for="cA6">60歳以降の年間生活費</label><span><span id="cA6V">-</span></span></div><input type="range" id="cA6" min="100" max="1000" step="10" value="300"></div>
-        <div class="row"><div class="lbl-wp"><label for="pen">年金 (65歳基準・年額)</label><span><span id="penV">-</span></span></div><input type="range" id="pen" min="0" max="400" step="10" value="150"></div>
-        <div class="row"><div class="lbl-wp"><label for="pA">年金受給開始年齢</label><span><span id="pAV">65</span>歳</span></div><input type="range" id="pA" min="60" max="75" value="65"></div>
+    <h1 style="text-align:center; color:#2563eb; font-size:1.4rem; margin:10px 0;">🔥 FIREシミュレーター</h1>
+    <div class="card" id="inputs"></div>
+    <div style="display:flex; gap:10px;">
+        <button id="btn" class="btn" style="background:#2563eb;">結果を計算する</button>
+        <button id="backBtn" class="btn" style="background:#10b981;">必要労働年数を逆算</button>
     </div>
-    <div class="btn-wp">
-        <button id="btn" class="btn">結果を計算する</button>
-        <button id="backBtn" class="btn">必要労働年数を逆算</button>
-    </div>
-    <div id="gRes" class="g-card"></div>
+    <div id="gRes" style="background:#eff6ff; border:2px solid #bfdbfe; color:#1e40af; border-radius:10px; padding:12px; text-align:center; font-weight:bold; display:none; margin-bottom:15px;"></div>
     <div class="card">
-        <div class="grid">
-            <div class="res"><div class="r-lbl">60歳総資産</div><div class="r-val" id="o60">---</div></div>
-            <div class="res"><div class="r-lbl">70歳総資産</div><div class="r-val" id="o70">---</div></div>
-            <div class="res"><div class="r-lbl">90歳総資産</div><div class="r-val" id="o90">---</div></div>
-            <div class="res"><div class="r-lbl">資産寿命</div><div class="r-val" id="risk">---</div></div>
-        </div>
-        <div class="tbl-wp"><table><thead><tr><th style="text-align:center;">年齢</th><th>総資産</th><th>運用資産</th><th>現金枠</th><th>生活費</th></tr></thead><tbody id="tb"></tbody></table></div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; font-weight:bold;" id="sums"></div>
+        <div style="overflow-x:auto;"><table><thead><tr><th style="text-align:center;">年齢</th><th>総資産</th><th>運用資産</th><th>現金枠</th><th>生活費</th></tr></thead><tbody id="tb"></tbody></table></div>
     </div>
 </div>
 <script>
-    const ids = ['cA','rA','inc','ivA','csA','idc','yld','cB6','cA6','pen','pA'];
-    const el = {}, disp = {}; ids.forEach(id => { el[id] = document.getElementById(id); disp[id] = document.getElementById(id+'V'); });
-    const out = { 60: document.getElementById('o60'), 70: document.getElementById('o70'), 90: document.getElementById('o90'), risk: document.getElementById('risk') };
-    const tb = document.getElementById('tb'), gRes = document.getElementById('gRes');
-    function fmt(n) {
-        if (n <= 0) return "0円";
-        if (n >= 10000) { const o = Math.floor(n / 10000), r = n % 10000; return r > 0 ? `${o}億${r}万円` : `${o}億円`; }
-        return `${n}万円`;
-    }
-    function fmtT(y) { return y <= 0 ? "0万円" : Math.round(y / 10000).toLocaleString() + "万円"; }
-    function sync() {
-        if (parseInt(el.rA.value) < parseInt(el.cA.value)) el.rA.value = el.cA.value;
-        ids.forEach(id => {
-            let v = parseFloat(el[id].value);
-            if (['cA','rA','pA'].includes(id)) disp[id].textContent = v + "歳";
-            else if (id === 'yld') disp[id].textContent = v.toFixed(1) + "%";
-            else disp[id].textContent = fmt(v);
-        });
-    }
-    function runCore(targetRA) {
-        const cA = parseInt(el.cA.value), pA = parseInt(el.pA.value);
-        const inc = parseFloat(el.inc.value)*10000, cB = parseFloat(el.cB6.value)*10000, cA6 = parseFloat(el.cA6.value)*10000;
-        let inv = parseFloat(el.ivA.value)*10000, cash = parseFloat(el.csA.value)*10000, idc = parseFloat(el.idc.value)*10000;
-        const r = parseFloat(el.yld.value)/100, pB = parseFloat(el.pen.value)*10000;
-        let pR = 1.0; if(pA < 65) pR -= (65 - pA)*12*0.004; else if(pA > 65) pR += (pA - 65)*12*0.007;
-        const pension = pB * pR; let die = 0, results = [];
-        for (let a = cA; a <= 100; a++) {
-            if (a === 60) { cash += idc; idc = 0; }
-            let tot = inv + cash + idc, cost = (a < 60) ? cB : cA6;
-            if (tot <= 0 && die === 0) die = a;
-            results.push({a, tot, inv, cash, idc, cost});
-            if (a < targetRA) {
-                let s = inc - cB; if (s > 0) inv += s; else cash += s;
-                inv *= (1 + r); if (a < 60) idc *= (1 + r);
-            } else {
-                if (a >= pA) cash += pension;
-                if (inv >= cost) inv -= cost; else { let rem = cost - inv; inv = 0; cash -= rem; }
-                if (inv > 0) inv *= (1 + r); if (cash < 0) cash = 0; if (a < 60) idc *= (1 + r);
-            }
+const CONFIG = [
+    {id:'cA', name:'現在の年齢', min:20, max:65, val:35, unit:'歳'},
+    {id:'rA', name:'リタイア年齢', min:25, max:70, val:50, unit:'歳'},
+    {id:'inc', name:'現在の年収', min:200, max:2000, step:50, val:600, m:true},
+    {id:'ivA', name:'運用資産 (初期)', min:0, max:20000, step:500, val:2000, m:true},
+    {id:'csA', name:'現金保有 (初期)', min:0, max:10000, step:100, val:1000, m:true},
+    {id:'idc', name:'現在のiDeCo残高', min:0, max:3000, step:50, val:300, m:true},
+    {id:'yld', name:'運用利回り', min:0, max:15, step:0.1, val:4.0, p:true},
+    {id:'inf', name:'インフレ率', min:0, max:10, step:0.1, val:2.0, p:true},
+    {id:'cB6', name:'60歳前の年間生活費', min:100, max:1000, step:10, val:400, m:true},
+    {id:'cA6', name:'60歳以降の年間生活費', min:100, max:1000, step:10, val:300, m:true},
+    {id:'pen', name:'年金 (65歳基準・年額)', min:0, max:400, step:10, val:150, m:true},
+    {id:'pA', name:'年金受給開始年齢', min:60, max:75, val:65, unit:'歳'}
+];
+
+const inpCont = document.getElementById('inputs');
+CONFIG.forEach(c => { inpCont.innerHTML += `<div class="row"><div class="lbl-wp"><label for="${c.id}">${c.name}</label><span><span id="${c.id}V">-</span></span></div><input type="range" id="${c.id}" min="${c.min}" max="${c.max}" step="${c.step||1}" value="${c.val}"></div>`; });
+
+const sumCont = document.getElementById('sums');
+[60, 70, 90, 'risk'].forEach(k => { sumCont.innerHTML += `<div style="background:#f8fafc; padding:8px; border-radius:6px; border:1px solid #e2e8f0;"><div style="font-size:0.75rem; color:#64748b;">${k==='risk'?'資産寿命':k+'歳総資産'}</div><div id="o${k}" style="font-size:0.95rem;">---</div></div>`; });
+
+const el = {}, disp = {}; CONFIG.forEach(c => { el[c.id] = document.getElementById(c.id); disp[c.id] = document.getElementById(c.id+'V'); });
+const out = { 60: document.getElementById('o60'), 70: document.getElementById('o70'), 90: document.getElementById('o90'), risk: document.getElementById('orisk') };
+const tb = document.getElementById('tb'), gRes = document.getElementById('gRes');
+
+function fmt(n) {
+    if (n <= 0) return "0円";
+    if (n >= 10000) { const o = Math.floor(n / 10000), r = n % 10000; return r > 0 ? `${o}億${r}万円` : `${o}億円`; }
+    return `${n}万円`;
+}
+function fmtT(y) { return y <= 0 ? "0万円" : Math.round(y / 10000).toLocaleString() + "万円"; }
+
+function sync() {
+    if (parseInt(el.rA.value) < parseInt(el.cA.value)) el.rA.value = el.cA.value;
+    CONFIG.forEach(c => {
+        let v = parseFloat(el[c.id].value);
+        if (c.m) disp[c.id].textContent = fmt(v);
+        else if (c.p) disp[c.id].textContent = v.toFixed(1) + "%";
+        else disp[c.id].textContent = v + c.unit;
+    });
+}
+
+function runCore(targetRA) {
+    const cA = parseInt(el.cA.value), pA = parseInt(el.pA.value);
+    const inc = parseFloat(el.inc.value)*10000, cB = parseFloat(el.cB6.value)*10000, cA6 = parseFloat(el.cA6.value)*10000;
+    let inv = parseFloat(el.ivA.value)*10000, cash = parseFloat(el.csA.value)*10000, idc = parseFloat(el.idc.value)*10000;
+    const r = parseFloat(el.yld.value)/100, inf = parseFloat(el.inf.value)/100, pB = parseFloat(el.pen.value)*10000;
+    let pR = 1.0; if(pA < 65) pR -= (65 - pA)*12*0.004; else if(pA > 65) pR += (pA - 65)*12*0.007;
+    const pension = pB * pR; let die = 0, results = [];
+    for (let a = cA; a <= 100; a++) {
+        if (a === 60) { cash += idc; idc = 0; }
+        let cost = ((a < 60) ? cB : cA6) * Math.pow(1 + inf, a - cA);
+        let tot = inv + cash + idc;
+        if (tot <= 0 && die === 0) die = a;
+        results.push({a, tot, inv, cash, idc, cost});
+        if (a < targetRA) {
+            let s = inc - cost; if (s > 0) inv += s; else cash += s;
+            inv *= (1 + r); if (a < 60) idc *= (1 + r);
+        } else {
+            if (a >= pA) cash += pension;
+            if (inv >= cost) inv -= cost; else { let rem = cost - inv; inv = 0; cash -= rem; }
+            if (inv > 0) inv *= (1 + r); if (cash < 0) cash = 0; if (a < 60) idc *= (1 + r);
         }
-        return { die, results };
     }
-    function calc() {
-        gRes.style.display = "none"; const rA = parseInt(el.rA.value), cA = parseInt(el.cA.value);
-        const { die, results } = runCore(rA); tb.innerHTML = "";
-        results.forEach(d => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td style="text-align:center;font-weight:bold;">${d.a==rA?d.a+'歳🚀':d.a+'歳'}</td><td style="font-weight:bold;color:var(--p);">${fmtT(d.tot)}</td><td>${fmtT(d.inv)}</td><td>${fmtT(d.cash+d.idc)}</td><td>${fmtT(d.cost)}</td>`;
-            tb.appendChild(tr);
-        });
-        [60, 70, 90].forEach(age => {
-            const d = results.find(x => x.a === age);
-            if (out[age]) out[age].textContent = d ? fmt(Math.round(d.tot / 10000)) : "---";
-            if (cA > age && out[age]) out[age].textContent = "対象外";
-        });
-        if (die > 0) { out.risk.textContent = `${die}歳で枯渇`; out.risk.style.color = "#dc2626"; }
-        else { out.risk.textContent = "100歳クリア"; out.risk.style.color = "#16a34a"; }
+    return { die, results };
+}
+
+function calc() {
+    gRes.style.display = "none"; const rA = parseInt(el.rA.value), cA = parseInt(el.cA.value);
+    const { die, results } = runCore(rA); tb.innerHTML = "";
+    results.forEach(d => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td style="text-align:center;font-weight:bold;">${d.a==rA?d.a+'歳🚀':d.a+'歳'}</td><td style="font-weight:bold;color:#2563eb;">${fmtT(d.tot)}</td><td>${fmtT(d.inv)}</td><td>${fmtT(d.cash+d.idc)}</td><td>${fmtT(d.cost)}</td>`;
+        tb.appendChild(tr);
+    });
+    [60, 70, 90].forEach(age => {
+        const d = results.find(x => x.a === age);
+        if (out[age]) out[age].textContent = d ? fmt(Math.round(d.tot / 10000)) : "---";
+        if (cA > age && out[age]) out[age].textContent = "対象外";
+    });
+    if (die > 0) { out.risk.textContent = `${die}歳で枯渇`; out.risk.style.color = "#dc2626"; }
+    else { out.risk.textContent = "100歳クリア"; out.risk.style.color = "#16a34a"; }
+}
+
+function reverseCalc() {
+    const cA = parseInt(el.cA.value); let targetAge = -1;
+    for (let checkRA = cA; checkRA <= 70; checkRA++) {
+        const { die } = runCore(checkRA); if (die === 0) { targetAge = checkRA; break; }
     }
-    function reverseCalc() {
-        const cA = parseInt(el.cA.value); let targetAge = -1;
-        for (let checkRA = cA; checkRA <= 70; checkRA++) {
-            const { die } = runCore(checkRA); if (die === 0) { targetAge = checkRA; break; }
-        }
-        gRes.style.display = "block";
-        if (targetAge === cA) { gRes.innerHTML = "🎉 今すぐリタイアしても100歳まで資産が持ちます！"; el.rA.value = cA; }
-        else if (targetAge > cA) { gRes.innerHTML = `🎯 100歳まで生き残るには【最低 ${targetAge}歳】まで働く必要があります！`; el.rA.value = targetAge; }
-        else { gRes.innerHTML = "⚠️ 70歳まで働いても100歳までに資産が枯渇する可能性があります。"; }
-        sync(); calc();
-    }
-    ids.forEach(id => el[id].addEventListener('input', sync));
-    document.getElementById('btn').addEventListener('click', calc);
-    document.getElementById('backBtn').addEventListener('click', reverseCalc);
-    window.addEventListener('DOMContentLoaded', () => { sync(); calc(); });
+    gRes.style.display = "block";
+    if (targetAge === cA) { gRes.innerHTML = "🎉 今すぐリタイアしても100歳まで資産が持ちます！"; el.rA.value = cA; }
+    else if (targetAge > cA) { gRes.innerHTML = `🎯 100歳まで生き残るには【最低 ${targetAge}歳】まで働く必要があります！`; el.rA.value = targetAge; }
+    else { gRes.innerHTML = "⚠️ 70歳まで働いても100歳までに資産が枯渇する可能性があります。"; }
+    sync(); calc();
+}
+
+CONFIG.forEach(c => el[c.id].addEventListener('input', sync));
+document.getElementById('btn').addEventListener('click', calc);
+document.getElementById('backBtn').addEventListener('click', reverseCalc);
+window.addEventListener('DOMContentLoaded', () => { sync(); calc(); });
 </script>
 </body>
 </html>
