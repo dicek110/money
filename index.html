@@ -164,7 +164,7 @@ const CONFIG = [
 
 const QAS = [
     {q:"Q1. 資産枯渇判定のタイミングは？", a:"その年の給与・生活費・運用益・税金の計算がすべて終わった「年末時点」の総資産で判定しています。途中で資金がマイナスになった場合は隠さず「資金ショート」として検知します。"},
-    {q:"Q2. 売却時の税金（キャピタルゲイン課税）の計算は？", a:"運用資産の『時価』と『累計投資元本』を別々に追跡しています。取り崩し時には売却額に占める利益の割合を正確に計算し、利益部分に対して一律20.315%の課税を行っています。"},
+    {q:"Q2. 売却時の税金（キャピタルゲイン課税）の計算は？", a:"運用資産の『時価』と『累計投資元本』を別々に追跡しています。取り崩し時には生活費とそれに伴う売却益税金を安全に計算し、利益部分に対して一律20.315%の課税を行っています。"},
     {q:"Q3. 現役時代の積立ロジックは？", a:"額面年収から一律20%（税金・社会保険料の簡易モデル）を引いた手取りから生活費を差し引き、黒字分を運用資産の元本と時価に同時に積み増します。"},
     {q:"Q4. 住宅ローンと賃貸の計算の違いは？", a:"【ローンあり】金利を考慮して毎年残高を減らし、完済後は住居費負担がゼロになります。\n【賃貸】家賃がインフレ率に応じて毎年上昇し続けます。"},
     {q:"Q5. iDeCoと年金の連動について", a:"iDeCoは60歳に達した瞬間に全額が現金・預金枠へ自動合算されます。公的年金は受給開始年齢から毎年収入にプラスされ、繰り上げ・繰り下げによる増減率（月±0.4%〜0.7%）も自動反映されます。"}
@@ -303,19 +303,20 @@ function runCore(targetRA) {
             
             let needed = totalCost;
             if (inv > 0) {
+                // 含み益の割合を計算
                 let profitRatio = Math.max(0, (inv - totalPrincipal) / inv);
-                let taxablePartRatio = profitRatio * 0.20315;
-                let grossWithdrawal = needed / (1 - taxablePartRatio);
                 
-                if (grossWithdrawal <= inv) {
-                    let taxOnProfit = grossWithdrawal * profitRatio * 0.20315;
+                // 生活費を取り崩す際の利益に対する税金と総額を計算（バグ修正済み）
+                let taxOnProfit = needed * profitRatio * 0.20315;
+                let totalWithdrawal = needed + taxOnProfit;
+                
+                if (totalWithdrawal <= inv) {
                     taxIncurred = taxOnProfit;
-                    let withdrawnPrincipal = grossWithdrawal * (1 - profitRatio);
-                    
-                    inv -= grossWithdrawal;
+                    let withdrawnPrincipal = needed * (1 - profitRatio);
+                    inv -= totalWithdrawal;
                     totalPrincipal = Math.max(0, totalPrincipal - withdrawnPrincipal);
                 } else {
-                    // 運用資産を全額売却しても足りない場合
+                    // 運用資産が足りず、全額売却する場合
                     let profitOnAll = inv * profitRatio * 0.20315;
                     taxIncurred = profitOnAll;
                     let netFromInv = inv - profitOnAll;
@@ -348,9 +349,6 @@ function runCore(targetRA) {
         }
         
         results.push({ a, tot, inv, cashAndIdc: totalCashAndIdc, totalCost, taxIncurred, isBankrupt, shortage });
-        if (isBankrupt && a >= targetRA) {
-            // 破綻後はシミュレーション継続または停止を表現
-        }
     }
     return { bankruptedAge, results };
 }
