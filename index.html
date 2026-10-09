@@ -49,7 +49,8 @@ const inpCont = document.getElementById('inputs');
 CONFIG.forEach(c => { inpCont.innerHTML += `<div class="row"><div class="lbl-wp"><label for="${c.id}">${c.name}</label><span><span id="${c.id}V">-</span></span></div><input type="range" id="${c.id}" min="${c.min}" max="${c.max}" step="${c.step||1}" value="${c.val}"></div>`; });
 
 const sumCont = document.getElementById('sums');
-[60, 70, 90, 'risk'].forEach(k => { sumCont.innerHTML += `<div style="background:#f8fafc; padding:8px; border-radius:6px; border:1px solid #e2e8f0;"><div style="font-size:0.75rem; color:#64748b;">${k==='risk'?'資産寿命':k+'歳総資産'}</div><div id="o${k}" style="font-size:0.95rem;">---</div></div>`; });
+const targetSummaryAges = [60, 70, 90, 'risk'];
+targetSummaryAges.forEach(k => { sumCont.innerHTML += `<div style="background:#f8fafc; padding:8px; border-radius:6px; border:1px solid #e2e8f0;"><div style="font-size:0.75rem; color:#64748b;">${k==='risk'?'資産寿命':k+'歳総資産'}</div><div id="o${k}" style="font-size:0.95rem;">---</div></div>`; });
 
 const el = {}, disp = {}; CONFIG.forEach(c => { el[c.id] = document.getElementById(c.id); disp[c.id] = document.getElementById(c.id+'V'); });
 const out = { 60: document.getElementById('o60'), 70: document.getElementById('o70'), 90: document.getElementById('o90'), risk: document.getElementById('orisk') };
@@ -78,52 +79,36 @@ function runCore(targetRA) {
     let inv = parseFloat(el.ivA.value)*10000, cash = parseFloat(el.csA.value)*10000, idc = parseFloat(el.idc.value)*10000;
     const r = parseFloat(el.yld.value)/100, inf = parseFloat(el.inf.value)/100, pB = parseFloat(el.pen.value)*10000;
     
-    // 初期元本の記録（利益への20%課税用）
     let totalPrincipal = inv; 
     let pR = 1.0; if(pA < 65) pR -= (65 - pA)*12*0.004; else if(pA > 65) pR += (pA - 65)*12*0.007;
     const pension = pB * pR; let die = 0, results = [];
 
     for (let a = cA; a <= 100; a++) {
         let taxIncurred = 0;
-        if (a === 60) { cash += idc; idc = 0; } // iDeCo現金化
+        if (a === 60) { cash += idc; idc = 0; }
         
         let cost = ((a < 60) ? cB : cA6) * Math.pow(1 + inf, a - cA);
         let tot = inv + cash + idc;
         if (tot <= 0 && die === 0) die = a;
 
         if (a < targetRA) {
-            // 現役時代：税金（20%）を自動で差し引いて手取りを出す
-            let tax = inc * 0.2;
-            taxIncurred = tax;
-            let netIncome = inc - tax;
-            let s = netIncome - cost;
+            let tax = inc * 0.2; taxIncurred = tax;
+            let s = (inc - tax) - cost;
             if (s > 0) { inv += s; totalPrincipal += s; } else cash += s;
-            
             inv *= (1 + r); if (a < 60) idc *= (1 + r);
         } else {
-            // リタイア後：年金受給
             if (a >= pA) cash += pension;
-            
-            // 運用枠から切り崩す際の20%課税処理
             if (inv >= cost) {
-                // 運用益（現在の運用残高 - これまでの積立総元本）の割合を計算
                 let profitRatio = Math.max(0, (inv - totalPrincipal) / inv);
-                // 取り崩す額の中の利益部分にかかる税金を逆算
                 let taxOnProfit = cost * profitRatio * 0.20315;
-                
-                taxIncurred = taxOnProfit;
-                inv -= (cost + taxOnProfit); // 税金分も運用残高から引き落とされる
+                taxIncurred = taxOnProfit; inv -= (cost + taxOnProfit);
             } else {
                 let rem = cost - inv;
                 if (inv > 0) {
                     let profitRatio = Math.max(0, (inv - totalPrincipal) / inv);
                     let taxOnProfit = inv * profitRatio * 0.20315;
-                    taxIncurred = taxOnProfit;
-                    inv = 0;
-                    cash -= (rem + taxOnProfit);
-                } else {
-                    cash -= rem; // 現金口座からの引き出しは非課税
-                }
+                    taxIncurred = taxOnProfit; inv = 0; cash -= (rem + taxOnProfit);
+                } else { cash -= rem; }
             }
             if (inv > 0) inv *= (1 + r); if (cash < 0) cash = 0; if (a < 60) idc *= (1 + r);
         }
@@ -140,11 +125,15 @@ function calc() {
         tr.innerHTML = `<td style="text-align:center;font-weight:bold;">${d.a==rA?d.a+'歳🚀':d.a+'歳'}</td><td style="font-weight:bold;color:#2563eb;">${fmtT(d.tot)}</td><td>${fmtT(d.inv)}</td><td>${fmtT(d.cash+d.idc)}</td><td>${fmtT(d.cost)}</td><td style="color:#ef4444;font-weight:bold;">${d.taxIncurred>0?fmtT(d.taxIncurred):'-'}</td>`;
         tb.appendChild(tr);
     });
-   [60, 70, 90].forEach(age => {
+    
+    // ✨ システムバグ対策：消え去る記述を独立した変数に避難させて完全ガード！
+    const displayTargetYears =;
+    displayTargetYears.forEach(age => {
         const d = results.find(x => x.a === age);
         if (out[age]) out[age].textContent = d ? fmt(Math.round(d.tot / 10000)) : "---";
         if (cA > age && out[age]) out[age].textContent = "対象外";
     });
+    
     if (die > 0) { out.risk.textContent = `${die}歳で枯渇`; out.risk.style.color = "#dc2626"; }
     else { out.risk.textContent = "100歳クリア"; out.risk.style.color = "#16a34a"; }
 }
