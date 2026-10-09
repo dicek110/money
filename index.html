@@ -3,235 +3,270 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FIREシミュレーション・ダッシュボード</title>
+    <title>FIRE Dashboard</title>
     <style>
-        :root {
-            --primary-color: #2563eb;
-            --bg-color: #f8fafc;
-            --card-bg: #ffffff;
-            --text-color: #1e293b;
-            --border-color: #e2e8f0;
-        }
         body {
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             padding: 20px;
-        }
-        .container {
-            max-width: 900px;
+            max-width: 600px;
             margin: 0 auto;
+            color: #111;
         }
         h1 {
-            text-align: center;
-            color: var(--primary-color);
-            margin-bottom: 30px;
+            font-size: 2rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-        @media (max-width: 768px) {
-            .grid { grid-template-columns: 1fr; }
-        }
-        .card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        .description {
+            font-size: 0.95rem;
+            color: #444;
+            margin-bottom: 25px;
+            line-height: 1.5;
         }
         .control-group {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
-        .control-group:last-child { margin-bottom: 0; }
         .label-wrapper {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 1rem;
         }
-        .value-display {
-            color: var(--primary-color);
-            font-size: 1.1rem;
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         input[type="range"] {
-            width: 100%;
+            flex: 1;
             height: 6px;
-            background: var(--border-color);
+            background: #cbd5e1;
             border-radius: 3px;
             outline: none;
-            -webkit-appearance: none;
         }
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: var(--primary-color);
-            cursor: pointer;
+        /* 実行ボタンのスタイリング */
+        .btn-container {
+            margin: 25px 0;
+            text-align: center;
         }
-        .result-title {
+        .calc-btn {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 12px 35px;
             font-size: 1.1rem;
-            color: #64748b;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: background-color 0.2s, transform 0.1s;
+            width: 100%;
+        }
+        .calc-btn:hover {
+            background-color: #1e88e5;
+        }
+        .calc-btn:active {
+            transform: scale(0.98);
+        }
+        .result-section {
+            margin-top: 20px;
+            border-top: 2px solid #e2e8f0;
+            padding-top: 20px;
+        }
+        .result-group {
+            margin-bottom: 20px;
+        }
+        .result-label {
+            font-size: 1.1rem;
+            font-weight: 500;
             margin-bottom: 5px;
         }
         .result-value {
-            font-size: 2.2rem;
-            font-weight: 800;
-            color: var(--primary-color);
-            margin-bottom: 20px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #000;
+            padding-left: 5px;
         }
-        .breakdown {
-            border-top: 1px solid var(--border-color);
-            padding-top: 15px;
-        }
-        .breakdown-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
+        .table-header-preview {
+            margin-top: 40px;
+            font-weight: bold;
             font-size: 0.95rem;
+            display: flex;
+            gap: 12px;
+            color: #333;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>🔥 FIREシミュレーション</h1>
-    
-    <div class="grid">
-        <!-- 入力コントロール -->
-        <div class="card">
-            <div class="control-group">
-                <div class="label-wrapper">
-                    <label for="initAsset">現在の資産</label>
-                    <span class="value-display"><span id="initAssetVal">3,000</span>万円</span>
-                </div>
-                <input type="range" id="initAsset" min="0" max="10000" step="100" value="3000">
-            </div>
+    <h1>🔥 FIRE Dashboard</h1>
+    <div class="description">
+        数値を動かして将来の資産をシミュレーション
+    </div>
 
-            <div class="control-group">
-                <div class="label-wrapper">
-                    <label for="monthlyInput">毎月の積立額</label>
-                    <span class="value-display"><span id="monthlyInputVal">10</span>万円</span>
-                </div>
-                <input type="range" id="monthlyInput" min="0" max="100" step="1" value="10">
-            </div>
-
-            <div class="control-group">
-                <div class="label-wrapper">
-                    <label for="years">積立・運用期間</label>
-                    <span class="value-display"><span id="yearsVal">15</span>年</span>
-                </div>
-                <input type="range" id="years" min="1" max="40" step="1" value="15">
-            </div>
-
-            <div class="control-group">
-                <div class="label-wrapper">
-                    <label for="yield">想定年利 (運用リターン)</label>
-                    <span class="value-display"><span id="yieldVal">5.0</span>%</span>
-                </div>
-                <input type="range" id="yield" min="0" max="15" step="0.5" value="5">
-            </div>
+    <!-- 入力スライドバー群 -->
+    <div class="control-group">
+        <div class="label-wrapper">
+            <span>運用資産: <span id="investAssetVal">13,000</span>万</span>
         </div>
-
-        <!-- 計算結果表示 -->
-        <div class="card" style="display: flex; flex-direction: column; justify-content: center;">
-            <div class="result-title">期間終了時の想定総資産</div>
-            <div class="result-value" id="totalAsset">--- 円</div>
-            
-            <div class="breakdown">
-                <div class="breakdown-item">
-                    <span>投資元本総額:</span>
-                    <span id="totalPrincipal">--- 円</span>
-                </div>
-                <div class="breakdown-item">
-                    <span>運用利益（複利効果）:</span>
-                    <span id="totalInterest" style="color: #10b981; font-weight: bold;">--- 円</span>
-                </div>
-                <div class="breakdown-item" style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed var(--border-color);">
-                    <span>4%ルールでの年間取崩し目安:</span>
-                    <span id="fourPercentRule" style="font-weight: bold;">--- 円</span>
-                </div>
-            </div>
+        <div class="slider-container">
+            <input type="range" id="investAsset" min="0" max="30000" step="500" value="13000">
         </div>
     </div>
-</div>
+
+    <div class="control-group">
+        <div class="label-wrapper">
+            <span>現金保有: <span id="cashAssetVal">3,000</span>万</span>
+        </div>
+        <div class="slider-container">
+            <input type="range" id="cashAsset" min="0" max="10000" step="100" value="3000">
+        </div>
+    </div>
+
+    <div class="control-group">
+        <div class="label-wrapper">
+            <span>運用利回り: <span id="yieldVal">4.0</span>%</span>
+        </div>
+        <div class="slider-container">
+            <input type="range" id="yield" min="0" max="15" step="0.1" value="4.0">
+        </div>
+    </div>
+
+    <div class="control-group">
+        <div class="label-wrapper">
+            <span>インフレ率: <span id="inflationVal">2.0</span>%</span>
+        </div>
+        <div class="slider-container">
+            <input type="range" id="inflation" min="0" max="10" step="0.1" value="2.0">
+        </div>
+    </div>
+
+    <!-- ✨ 追加：実行ボタン -->
+    <div class="btn-container">
+        <button id="calcBtn" class="calc-btn">シミュレーションを実行する</button>
+    </div>
+
+    <!-- 結果出力群 -->
+    <div class="result-section">
+        <div class="result-group">
+            <div class="result-label">60歳総資産</div>
+            <div class="result-value" id="asset60">--- 円</div>
+        </div>
+
+        <div class="result-group">
+            <div class="result-label">70歳総資産</div>
+            <div class="result-value" id="asset70">--- 円</div>
+        </div>
+
+        <div class="result-group">
+            <div class="result-label">90歳総資産</div>
+            <div class="result-value" id="asset90">--- 円</div>
+        </div>
+
+        <div class="result-group">
+            <div class="result-label">枯渇リスク</div>
+            <div class="result-value" id="riskStatus">---</div>
+        </div>
+    </div>
+
+    <!-- 画面最下部の項目プレビュー（将来拡張用） -->
+    <div class="table-header-preview">
+        <span>年齢</span> <span>生活費</span> <span>年金</span> <span>運用資産</span> <span>現金</span> <span>総資産</span>
+    </div>
 
 <script>
-    // DOM要素の取得
-    const inputs = {
-        initAsset: document.getElementById('initAsset'),
-        monthlyInput: document.getElementById('monthlyInput'),
-        years: document.getElementById('years'),
-        yield: document.getElementById('yield')
+    // 1. 要素の取得
+    const sliders = {
+        invest: document.getElementById('investAsset'),
+        cash: document.getElementById('cashAsset'),
+        yield: document.getElementById('yield'),
+        inflation: document.getElementById('inflation')
     };
 
-    const displays = {
-        initAssetVal: document.getElementById('initAssetVal'),
-        monthlyInputVal: document.getElementById('monthlyInputVal'),
-        yearsVal: document.getElementById('yearsVal'),
-        yieldVal: document.getElementById('yieldVal'),
-        totalAsset: document.getElementById('totalAsset'),
-        totalPrincipal: document.getElementById('totalPrincipal'),
-        totalInterest: document.getElementById('totalInterest'),
-        fourPercentRule: document.getElementById('fourPercentRule')
+    const labels = {
+        invest: document.getElementById('investAssetVal'),
+        cash: document.getElementById('cashAssetVal'),
+        yield: document.getElementById('yieldVal'),
+        inflation: document.getElementById('inflationVal')
     };
 
-    // 通貨フォーマット関数 (例: 12,345,678円)
-    function formatCurrency(num) {
-        return Math.round(num).toLocaleString('ja-JP') + ' 円';
-    }
+    const outputs = {
+        asset60: document.getElementById('asset60'),
+        asset70: document.getElementById('asset70'),
+        asset90: document.getElementById('asset90'),
+        risk: document.getElementById('riskStatus')
+    };
 
-    // 計算メインロジック
-    function calculateFIRE() {
-        // スライドバーの値を取得（単位変換含む）
-        const initAsset = parseFloat(inputs.initAsset.value) * 10000; // 万円 -> 円
-        const monthlyInput = parseFloat(inputs.monthlyInput.value) * 10000; // 万円 -> 円
-        const years = parseInt(inputs.years.value);
-        const annualYield = parseFloat(inputs.yield.value) / 100;
+    const calcBtn = document.getElementById('calcBtn');
 
-        // スライドバー横の数字表示をリアルタイム更新
-        displays.initAssetVal.textContent = parseInt(inputs.initAsset.value).toLocaleString();
-        displays.monthlyInputVal.textContent = inputs.monthlyInput.value;
-        displays.yearsVal.textContent = inputs.years.value;
-        displays.yieldVal.textContent = annualYield === 0 ? "0.0" : parseFloat(inputs.yield.value).toFixed(1);
-
-        // 複利計算
-        let total = initAsset;
-        const monthlyYield = annualYield / 12;
-        const totalMonths = years * 12;
-
-        if (monthlyYield === 0) {
-            total = initAsset + (monthlyInput * totalMonths);
-        } else {
-            for (let i = 0; i < totalMonths; i++) {
-                total = (total + monthlyInput) * (1 + monthlyYield);
-            }
+    // 金額フォーマット関数
+    function formatOkuMan(yen) {
+        if (yen <= 0) return "0円";
+        const man = Math.round(yen / 10000);
+        if (man >= 10000) {
+            const oku = Math.floor(man / 10000);
+            const remainingMan = man % 10000;
+            return remainingMan > 0 ? `${oku}億${remainingMan.toLocaleString()}万円` : `${oku}億円`;
         }
-
-        // 元本と利益の計算
-        const totalPrincipal = initAsset + (monthlyInput * totalMonths);
-        const totalInterest = Math.max(0, total - totalPrincipal);
-        const fourPercent = total * 0.04;
-
-        // 結果画面の空白を埋める（UIへ反映）
-        displays.totalAsset.textContent = formatCurrency(total);
-        displays.totalPrincipal.textContent = formatCurrency(totalPrincipal);
-        displays.totalInterest.textContent = formatCurrency(totalInterest);
-        displays.fourPercentRule.textContent = formatCurrency(fourPercent) + `（月額 約${Math.round(fourPercent / 12).toLocaleString()}円）`;
+        return `${man.toLocaleString()}万円`;
     }
 
-    // すべての入力イベントにリスナーを設定（inputイベントでリアルタイム連動）
-    Object.values(inputs).forEach(input => {
-        input.addEventListener('input', calculateFIRE);
+    // スライドバーの横にある「テキスト数値のみ」をリアルタイム更新する関数
+    function updateLabelsOnly() {
+        labels.invest.textContent = parseFloat(sliders.invest.value).toLocaleString();
+        labels.cash.textContent = parseFloat(sliders.cash.value).toLocaleString();
+        labels.yield.textContent = parseFloat(sliders.yield.value).toFixed(1);
+        labels.inflation.textContent = parseFloat(sliders.inflation.value).toFixed(1);
+    }
+
+    // ボタンを押した時に「計算を実行して下の数字を書き換える」関数
+    function runSimulation() {
+        const investVal = parseFloat(sliders.invest.value); 
+        const cashVal = parseFloat(sliders.cash.value);     
+        const yieldVal = parseFloat(sliders.yield.value);   
+        const inflationVal = parseFloat(sliders.inflation.value); 
+
+        // 簡易計算ロジック (60歳=10年後, 70歳=20年後, 90歳=40年後を想定)
+        const realRate = (yieldVal - inflationVal) / 100;
+        const startTotal = (investVal + cashVal) * 10000; 
+
+        const total60 = startTotal * Math.pow(1 + realRate, 10);
+        const total70 = startTotal * Math.pow(1 + realRate, 20);
+        const total90 = startTotal * Math.pow(1 + realRate, 40);
+
+        // 結果画面の書き換え
+        outputs.asset60.textContent = formatOkuMan(total60);
+        outputs.asset70.textContent = formatOkuMan(total70);
+        outputs.asset90.textContent = formatOkuMan(total90);
+
+        // 枯渇リスク判定
+        if (total90 <= 0) {
+            outputs.risk.textContent = "⚠️ 高リスク（90歳までに枯渇の可能性）";
+            outputs.risk.style.color = "#dc2626";
+        } else if (total90 < startTotal * 0.5) {
+            outputs.risk.textContent = "⚡ 中リスク（資産が減少傾向）";
+            outputs.risk.style.color = "#d97706";
+        } else {
+            outputs.risk.textContent = "✅ 低リスク（資産維持・安定）";
+            outputs.risk.style.color = "#16a34a";
+        }
+    }
+
+    // スライドバーを動かした時は、横の「◯◯万」「◯%」の数値テキストだけを動かす
+    Object.values(sliders).forEach(slider => {
+        if (slider) slider.addEventListener('input', updateLabelsOnly);
     });
 
-    // 初期読み込み時に一度計算を走らせる
-    window.addEventListener('DOMContentLoaded', calculateFIRE);
+    // 実行ボタンをクリックした時に初めてシミュレーションを走らせる
+    calcBtn.addEventListener('click', runSimulation);
+
+    // 最初の読み込み時：バーの数値の同期＋初期の計算結果を一度表示させておく
+    window.addEventListener('DOMContentLoaded', () => {
+        updateLabelsOnly();
+        runSimulation();
+    });
 </script>
 
 </body>
