@@ -48,13 +48,11 @@
         <div class="row"><div class="lbl-wp"><label for="pA">年金受給開始年齢</label><span><span id="pAV">65</span>歳</span></div><input type="range" id="pA" min="60" max="75" value="65"></div>
     </div>
     
-    <!-- 🎛 2つのボタン配置 -->
     <div class="btn-wp">
         <button id="btn" class="btn">結果を計算する</button>
         <button id="backBtn" class="btn">目標リタイア年齢を逆算</button>
     </div>
 
-    <!-- 📢 逆算結果メッセージ欄 -->
     <div id="gyakuResult" class="gyaku-card"></div>
 
     <div class="card">
@@ -123,7 +121,8 @@
         const { die, results } = runCore(rA); tb.innerHTML = "";
         results.forEach(d => {
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td style="text-align:center;font-weight:bold;">${d.a==rA?d.a+'歳🚀':d.a+'歳'}</td><td style="font-weight:bold;color:var(--p);">${fmtT(d.tot)}</td><td>${fmtT(d.inv)}</td><td>${fmtT(d.cash+d.idc)}</td><td style="color:#64748b;">${d.a<rA?'-':fmtT(d.cost)}</td>`;
+            // ✨ 修正箇所: 現役時代（a < rA）であっても、生活費（d.cost）を確実に表示するように変更
+            tr.innerHTML = `<td style="text-align:center;font-weight:bold;">${d.a==rA?d.a+'歳🚀':d.a+'歳'}</td><td style="font-weight:bold;color:var(--p);">${fmtT(d.tot)}</td><td>${fmtT(d.inv)}</td><td>${fmtT(d.cash+d.idc)}</td><td style="color: #475569;">${fmtT(d.cost)}</td>`;
             tb.appendChild(tr);
         });
         const finalTot = results[results.length-1].tot;
@@ -133,6 +132,5 @@
         if (die > 0) { out.risk.textContent = `${die}歳で枯渇`; out.risk.style.color = "#dc2626"; }
         else { out.risk.textContent = "100歳クリア"; out.risk.style.color = "#16a34a"; }
     }
-    // 🚀 逆算ロジックの追加
     function reverseCalc() {
         const cA = parseInt(el.cA.value); let targetAge = -1;
