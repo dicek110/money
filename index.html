@@ -49,8 +49,8 @@ const inpCont = document.getElementById('inputs');
 CONFIG.forEach(c => { inpCont.innerHTML += `<div class="row"><div class="lbl-wp"><label for="${c.id}">${c.name}</label><span><span id="${c.id}V">-</span></span></div><input type="range" id="${c.id}" min="${c.min}" max="${c.max}" step="${c.step||1}" value="${c.val}"></div>`; });
 
 const sumCont = document.getElementById('sums');
-const targetSummaryAges = [60, 70, 90, 'risk'];
-targetSummaryAges.forEach(k => { sumCont.innerHTML += `<div style="background:#f8fafc; padding:8px; border-radius:6px; border:1px solid #e2e8f0;"><div style="font-size:0.75rem; color:#64748b;">${k==='risk'?'資産寿命':k+'歳総資産'}</div><div id="o${k}" style="font-size:0.95rem;">---</div></div>`; });
+const summaryKeys = String("60,70,90,risk").split(",");
+summaryKeys.forEach(k => { sumCont.innerHTML += `<div style="background:#f8fafc; padding:8px; border-radius:6px; border:1px solid #e2e8f0;"><div style="font-size:0.75rem; color:#64748b;">${k==='risk'?'資産寿命':k+'歳総資産'}</div><div id="o${k}" style="font-size:0.95rem;">---</div></div>`; });
 
 const el = {}, disp = {}; CONFIG.forEach(c => { el[c.id] = document.getElementById(c.id); disp[c.id] = document.getElementById(c.id+'V'); });
 const out = { 60: document.getElementById('o60'), 70: document.getElementById('o70'), 90: document.getElementById('o90'), risk: document.getElementById('orisk') };
@@ -126,9 +126,10 @@ function calc() {
         tb.appendChild(tr);
     });
     
-    // ✨ システムバグ対策：消え去る記述を独立した変数に避難させて完全ガード！
-    const displayTargetYears =;
-    displayTargetYears.forEach(age => {
+    // ★システムバグ完全回避：文字が消去されない「特殊な文字列分割」の記法で記述！
+    const targetAges = String("60,70,90").split(",");
+    targetAges.forEach(ageStr => {
+        const age = parseInt(ageStr);
         const d = results.find(x => x.a === age);
         if (out[age]) out[age].textContent = d ? fmt(Math.round(d.tot / 10000)) : "---";
         if (cA > age && out[age]) out[age].textContent = "対象外";
