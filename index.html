@@ -30,16 +30,18 @@
         <div class="sec" style="margin-top:0;">基本情報</div>
         <div class="row"><div class="lbl-wp"><label for="cA">現在の年齢</label><span><span id="cAV">35</span>歳</span></div><input type="range" id="cA" min="20" max="65" value="35"></div>
         <div class="row"><div class="lbl-wp"><label for="rA">リタイア年齢</label><span><span id="rAV">50</span>歳</span></div><input type="range" id="rA" min="25" max="70" value="50"></div>
-        <div class="row"><div class="lbl-wp"><label for="inc">現在の年収</label><span><span id="incV">600</span>万円</span></div><input type="range" id="inc" min="200" max="2000" step="50" value="600"></div>
+        <div class="row"><div class="lbl-wp"><label for="inc">現在の年収</label><span><span id="incV">-</span></span></div><input type="range" id="inc" min="200" max="2000" step="50" value="600"></div>
+        
         <div class="sec">初期資産（MAX 2億円）</div>
-        <div class="row"><div class="lbl-wp"><label for="ivA">運用資産</label><span><span id="ivAV">2,000</span>万円</span></div><input type="range" id="ivA" min="0" max="20000" step="500" value="2000"></div>
-        <div class="row"><div class="lbl-wp"><label for="csA">現金保有</label><span><span id="csAV">1,000</span>万円</span></div><input type="range" id="csA" min="0" max="10000" step="100" value="1000"></div>
-        <div class="row"><div class="lbl-wp"><label for="idc">現在のiDeCo残高</label><span><span id="idcV">300</span>万円</span></div><input type="range" id="idc" min="0" max="3000" step="50" value="300"></div>
+        <div class="row"><div class="lbl-wp"><label for="ivA">運用資産</label><span><span id="ivAV">-</span></span></div><input type="range" id="ivA" min="0" max="20000" step="500" value="2000"></div>
+        <div class="row"><div class="lbl-wp"><label for="csA">現金保有</label><span><span id="csAV">-</span></span></div><input type="range" id="csA" min="0" max="10000" step="100" value="1000"></div>
+        <div class="row"><div class="lbl-wp"><label for="idc">現在のiDeCo残高</label><span><span id="idcV">-</span></span></div><input type="range" id="idc" min="0" max="3000" step="50" value="300"></div>
         <div class="row"><div class="lbl-wp"><label for="yld">運用利回り</label><span><span id="yldV">4.0</span>%</span></div><input type="range" id="yld" min="0" max="15" step="0.1" value="4.0"></div>
+        
         <div class="sec">生活費・年金</div>
-        <div class="row"><div class="lbl-wp"><label for="cB6">60歳前の年間生活費</label><span><span id="cB6V">400</span>万円</span></div><input type="range" id="cB6" min="100" max="1000" step="10" value="400"></div>
-        <div class="row"><div class="lbl-wp"><label for="cA6">60歳以降の年間生活費</label><span><span id="cA6V">300</span>万円</span></div><input type="range" id="cA6" min="100" max="1000" step="10" value="300"></div>
-        <div class="row"><div class="lbl-wp"><label for="pen">年金（65歳基準・年額）</label><span><span id="penV">150</span>万円</span></div><input type="range" id="pen" min="0" max="400" step="10" value="150"></div>
+        <div class="row"><div class="lbl-wp"><label for="cB6">60歳前の年間生活費</label><span><span id="cB6V">-</span></span></div><input type="range" id="cB6" min="100" max="1000" step="10" value="400"></div>
+        <div class="row"><div class="lbl-wp"><label for="cA6">60歳以降の年間生活費</label><span><span id="cA6V">-</span></span></div><input type="range" id="cA6" min="100" max="1000" step="10" value="300"></div>
+        <div class="row"><div class="lbl-wp"><label for="pen">年金（65歳基準・年額）</label><span><span id="penV">-</span></span></div><input type="range" id="pen" min="0" max="400" step="10" value="150"></div>
         <div class="row"><div class="lbl-wp"><label for="pA">年金受給開始年齢</label><span><span id="pAV">65</span>歳</span></div><input type="range" id="pA" min="60" max="75" value="65"></div>
     </div>
     <button id="btn" class="btn">シミュレーションを実行する</button>
@@ -59,28 +61,58 @@
     const el = {}, disp = {}; ids.forEach(id => { el[id] = document.getElementById(id); disp[id] = document.getElementById(id+'V'); });
     const out = { 60: document.getElementById('o60'), 70: document.getElementById('o70'), 90: document.getElementById('o90'), risk: document.getElementById('risk') };
     let ctxChart = null;
-    function fmt(y) {
-        if (y <= 0) return "0円"; const m = Math.round(y / 10000);
-        if (m >= 10000) { const o = Math.floor(m / 10000); const r = m % 10000; return r > 0 ? `${o}億${r.toLocaleString()}万円` : `${o}億円`; }
-        return `${m.toLocaleString()}万円`;
+
+    // 「◯億◯千万円」に美しくフォーマットする共通関数（スライダーと結果の両方で使用）
+    function fmt(manValue) {
+        if (manValue <= 0) return "0円";
+        if (manValue >= 10000) {
+            const oku = Math.floor(manValue / 10000);
+            const remMan = manValue % 10000;
+            return remMan > 0 ? `${oku}億${remMan.toLocaleString()}万円` : `${oku}億円`;
+        }
+        return `${manValue.toLocaleString()}万円`;
     }
+
+    // スライダーを動かしたときに、横のテキストをリアルタイムで「◯億◯万円」に直す関数
     function sync() {
         if (parseInt(el.rA.value) < parseInt(el.cA.value)) el.rA.value = el.cA.value;
-        ids.forEach(id => { let v = parseFloat(el[id].value); disp[id].textContent = (id==='yld') ? v.toFixed(1) : v.toLocaleString(); });
+        ids.forEach(id => {
+            let v = parseFloat(el[id].value);
+            if (id === 'cA' || id === 'rA' || id === 'pA') {
+                disp[id].textContent = v + "歳";
+            } else if (id === 'yld') {
+                disp[id].textContent = v.toFixed(1) + "%";
+            } else {
+                // 金額系のスライダーの値をすべて「◯億◯千万円」表記に一括変換！
+                disp[id].textContent = fmt(v);
+            }
+        });
     }
+
+    // 計算＆グラフ描画のメインロジック
     function calc() {
         const cA = parseInt(el.cA.value), rA = parseInt(el.rA.value), pA = parseInt(el.pA.value);
         const inc = parseFloat(el.inc.value)*10000, cB = parseFloat(el.cB6.value)*10000, cA6 = parseFloat(el.cA6.value)*10000;
         let inv = parseFloat(el.ivA.value)*10000, cash = parseFloat(el.csA.value)*10000, idc = parseFloat(el.idc.value)*10000;
         const r = parseFloat(el.yld.value)/100, pB = parseFloat(el.pen.value)*10000;
+        
         let pR = 1.0; if(pA < 65) pR -= (65 - pA)*12*0.004; else if(pA > 65) pR += (pA - 65)*12*0.007;
         const pension = pB * pR;
         let lbs = [], dInv = [], dCs = [], die = 0;
+
         for (let a = cA; a <= 100; a++) {
-            if (a === 60) { cash += idc; idc = 0; }
-            let tot = inv + cash + idc; lbs.push(a + "歳"); dInv.push(Math.round(inv)); dCs.push(Math.round(cash + idc));
-            if (a === 60) out[60].textContent = fmt(tot); if (a === 70) out[70].textContent = fmt(tot); if (a === 90) out[90].textContent = fmt(tot);
+            if (a === 60) { cash += idc; idc = 0; } // 60歳でiDeCo全額現金合流
+            
+            let tot = inv + cash + idc; 
+            lbs.push(a + "歳"); 
+            dInv.push(Math.round(inv)); 
+            dCs.push(Math.round(cash + idc));
+            
+            if (a === 60) out[60].textContent = fmt(Math.round(tot/10000)); 
+            if (a === 70) out[70].textContent = fmt(Math.round(tot/10000)); 
+            if (a === 90) out[90].textContent = fmt(Math.round(tot/10000));
             if (tot <= 0 && die === 0) die = a;
+
             if (a < rA) {
                 let s = inc - cB; if (s > 0) inv += s; else cash += s;
                 inv *= (1 + r); if (a < 60) idc *= (1 + r);
@@ -90,8 +122,15 @@
                 if (inv > 0) inv *= (1 + r); if (cash < 0) cash = 0; if (a < 60) idc *= (1 + r);
             }
         }
-        if (cA > 60) out[60].textContent = "対象外"; if (cA > 70) out[70].textContent = "対象外"; if (cA > 90) out[90].textContent = "対象外";
-        if (die > 0) { out.risk.textContent = `${die}歳で枯渇`; out.risk.style.color = "#dc2626"; } else { out.risk.textContent = "100歳クリア"; out.risk.style.color = "#16a34a"; }
+
+        if (cA > 60) out[60].textContent = "対象外"; 
+        if (cA > 70) out[70].textContent = "対象外"; 
+        if (cA > 90) out[90].textContent = "対象外";
+        
+        if (die > 0) { out.risk.textContent = `${die}歳で枯渇`; out.risk.style.color = "#dc2626"; } 
+        else { out.risk.textContent = "100歳クリア"; out.risk.style.color = "#16a34a"; }
+
+        // --- 📊 積み上げ折れ線グラフの再生成 ---
         if (ctxChart) ctxChart.destroy();
         ctxChart = new Chart(document.getElementById('chart').getContext('2d'), {
             type: 'line', data: { labels: lbs, datasets: [
@@ -100,6 +139,8 @@
             ]}, options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true, ticks: { callback: function(v) { return (v / 10000).toLocaleString() + '万'; } } } } }
         });
     }
+
+    // イベントの紐付け
     ids.forEach(id => el[id].addEventListener('input', sync));
     document.getElementById('btn').addEventListener('click', calc);
     window.addEventListener('DOMContentLoaded', () => { sync(); calc(); });
