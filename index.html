@@ -1,5 +1,3 @@
-
-以下のコードを丸ごとコピーして上書きしてください。
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -49,10 +47,13 @@
         
         .alert-box { border-radius: 10px; padding: 12px; text-align: center; font-weight: bold; display: none; margin-bottom: 15px; }
         .alert-info { background: #eff6ff; border: 2px solid #bfdbfe; color: #1e40af; }
+        .alert-warn { background: #fef2f2; border: 2px solid #fecaca; color: #991b1b; }
 
-        table { width: 100%; border-collapse: collapse; text-align: right; font-size: 0.8rem; min-width: 500px; }
-        th, td { padding: 8px; border-bottom: 1px solid var(--border); } 
-        th { background: #f8fafc; color: var(--text-sub); position: sticky; top: 0; }
+        /* スマホ対応：テーブルの横スクロールと崩れ防止 */
+        .table-container { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; max-height: 450px; }
+        table { width: 100%; border-collapse: collapse; text-align: right; font-size: 0.8rem; white-space: nowrap; }
+        th, td { padding: 8px 10px; border-bottom: 1px solid var(--border); } 
+        th { background: #f8fafc; color: var(--text-sub); position: sticky; top: 0; z-index: 10; }
         
         .tab-wp { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 15px; }
         .tab-btn { flex: 1; padding: 10px; background: none; border: none; font-size: 0.95rem; font-weight: bold; color: var(--text-sub); cursor: pointer; text-align: center; }
@@ -93,8 +94,8 @@
     </div>
 
     <div class="tab-wp">
-        <button class="tab-btn active" onclick="switchTab('sim-tab')">シミュレーター</button>
-        <button class="tab-btn" onclick="switchTab('qa-tab')">計算ロジックQA</button>
+        <button class="tab-btn active" onclick="switchTab('sim-tab', event)">シミュレーター</button>
+        <button class="tab-btn" onclick="switchTab('qa-tab', event)">計算ロジックQA</button>
     </div>
 
     <div id="sim-tab" class="tab-content active">
@@ -113,10 +114,10 @@
             <button id="backBtn" class="btn btn-success">目標寿命に合わせた年齢を逆算</button>
         </div>
 
-        <div id="gRes" class="alert-box alert-info"></div>
+        <div id="gRes" class="alert-box"></div>
 
         <div class="card">
-            <div style="overflow-x:auto; max-height:450px;">
+            <div class="table-container">
                 <table>
                     <thead>
                         <tr>
@@ -162,10 +163,11 @@ const CONFIG = [
 ];
 
 const QAS = [
-    {q:"Q1. 資産枯渇判定の仕組みは？", a:"設定した目標寿命までに資金ショートが起きていないかを判定します。"},
-    {q:"Q2. 運用資産の計算ロジックは？", a:"単位を万円に統一し、安全な複利と取り崩しを行っています。"}
+    {q:"Q1. 資産枯渇と赤字判定の仕組みは？", a:"各年の収支計算後、必要な支払いができなかった場合は「資金ショート」として正確に検知し、マイナス残高を隠さずに評価します。"},
+    {q:"Q2. iDeCoや年金の扱いは？", a:"60歳到達時にiDeCoは全額が現金枠へ合算され、公的年金は受給開始年齢から自動加算されます。受給額は繰り上げ・繰り下げを簡易反映しています。"}
 ];
 
+// UIの構築
 const inpCont = document.getElementById('inputs-container');
 CONFIG.forEach(c => {
     inpCont.innerHTML += `
@@ -191,11 +193,20 @@ CONFIG.forEach(c => {
     numEl[c.id] = document.getElementById(c.id + '_num');
 });
 
+// 入力値の範囲バリデーション・同期処理
 CONFIG.forEach(c => {
-    el[c.id].addEventListener('input', () => { numEl[c.id].value = el[c.id].value; triggerCalc(); });
+    el[c.id].addEventListener('input', () => { 
+        numEl[c.id].value = el[c.id].value; 
+        triggerCalc(); 
+    });
     numEl[c.id].addEventListener('input', () => { 
         let v = parseFloat(numEl[c.id].value);
-        if(!isNaN(v)) { el[c.id].value = v; triggerCalc(); }
+        if(!isNaN(v)) {
+            if(v < c.min) v = c.min;
+            if(v > c.max) v = c.max;
+            el[c.id].value = v;
+            triggerCalc(); 
+        }
     });
 });
 
@@ -204,58 +215,60 @@ function toggleHousing() {
     CONFIG.forEach(c => { if (c.g) document.getElementById('row_' + c.id).style.display = (c.g === type) ? 'block' : 'none'; });
 }
 
-function switchTab(tabId) {
+function switchTab(tabId, event) {
     document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('active'));
     document.getElementById(tabId).classList.add('active');
-    event.currentTarget.classList.add('active');
+    if (event && event.currentTarget) {
+        event.currentTarget.classList.add('active');
+    }
 }
 
 function toggleQA(e) { e.parentElement.classList.toggle('open'); }
 
 function fmt(n) {
     if (n <= 0) return "0万円";
-    if (n >= 10000) { const o = Math.floor(n / 10000), r = Math.round(n % 10000); return r > 0 ? `${o}億${r.toLocaleString()}万円` : `${o}億円`; }
+    if (n >= 10000) { 
+        const o = Math.floor(n / 10000), r = Math.round(n % 10000); 
+        return r > 0 ? `${o}億${r.toLocaleString()}万円` : `${o}億円`; 
+    }
     return `${Math.round(n).toLocaleString()}万円`;
 }
 
-function runCore(targetRA) {
-    const cA = parseInt(el.cA.value), pA = parseInt(el.pA.value);
-    const inc = parseFloat(el.inc.value); // すべて「万円」単位で処理
-    const cB = parseFloat(el.cB6.value), cA6 = parseFloat(el.cA6.value);
+/**
+ * 【計算エンジン：完全独立型純粋関数】
+ * UIの状態から入力パラメータを受け取り、純粋にシミュレーション結果の配列と破綻年齢を返す
+ */
+function runCoreEngine(params) {
+    const { cA, tLife, rA, inc, ivA, csA, idcStart, yld, inf, cB6, cA6, hType, lBal, lPay, lRat, rMon, pen, pA } = params;
     
-    let inv = parseFloat(el.ivA.value);
-    let cash = parseFloat(el.csA.value);
-    let idc = parseFloat(el.idc.value);
+    let inv = ivA;
+    let cash = csA;
+    let idc = idcStart;
+    let currLoan = lBal;
     
-    const r = parseFloat(el.yld.value)/100;
-    const inf = parseFloat(el.inf.value)/100;
-    const pB = parseFloat(el.pen.value);
-    
-    const hType = document.querySelector('input[name="hType"]:checked').value;
-    let currLoan = parseFloat(el.lBal.value);
-    let lPay = parseFloat(el.lPay.value);
-    let lRat = parseFloat(el.lRat.value)/100;
-    let rAnn = parseFloat(el.rMon.value) * 12; // 年間家賃（万円）
-    
+    // 年金受給額の調整（65歳基準 ± 毎月0.4%~0.7%）
     let pR = 1.0;
     if(pA < 65) pR -= (65 - pA) * 12 * 0.004;
     else if(pA > 65) pR += (pA - 65) * 12 * 0.007;
-    const pension = pB * Math.max(0.5, pR);
+    const pension = pen * Math.max(0.5, pR);
     
     let results = [];
     let bankruptedAge = 0;
+    let isAlreadyBankrupt = false;
 
     for (let a = cA; a <= 100; a++) {
         let taxIncurred = 0;
         
+        // 1. 60歳到達時のiDeCo合流
         if (a === 60) {
             cash += idc;
             idc = 0;
         }
         
+        // 2. 基礎生活費と住居費のインフレ換算
         let yearsPassed = a - cA;
-        let baseCost = ((a < 60) ? cB : cA6) * Math.pow(1 + inf, yearsPassed);
+        let baseCost = ((a < 60) ? cB6 : cA6) * Math.pow(1 + inf, yearsPassed);
         let hCost = 0;
         if (hType === 'loan') {
             if (currLoan > 0) {
@@ -266,30 +279,39 @@ function runCore(targetRA) {
                 hCost = lPay;
             }
         } else {
-            hCost = rAnn * Math.pow(1 + inf, yearsPassed);
+            hCost = (rMon * 12) * Math.pow(1 + inf, yearsPassed);
         }
         let totalCost = baseCost + hCost;
         
-        if (a < targetRA) {
+        if (isAlreadyBankrupt) {
+            // 一度破綻した後の処理
+            results.push({ a, tot: 0, inv: 0, cashAndIdc: 0, totalCost, taxIncurred: 0, isBankrupt: true });
+            continue;
+        }
+        
+        // 3. 現役時代 vs リタイア後 の収支処理
+        if (a < rA) {
             // 現役時代
-            let tax = inc * 0.2; // 簡易税金（万円）
+            let tax = inc * 0.2; // 簡易税金モデル
             taxIncurred = tax;
             let netIncome = inc - tax;
-            let savings = netIncome - totalCost;
+            let netCashFlow = netIncome - totalCost;
             
-            // 運用資産は複利で増え、貯蓄があれば追加される
-            inv = (inv + (savings > 0 ? savings : 0)) * (1 + r);
-            if (savings < 0) {
-                cash += savings; // 赤字分は現金からマイナス
+            if (netCashFlow >= 0) {
+                inv = (inv + netCashFlow) * (1 + yld);
+            } else {
+                // 赤字の場合、現金から補填し、残りは投資の複利運用
+                cash += netCashFlow;
+                inv = inv * (1 + yld);
             }
-            if (a < 60) idc *= (1 + r);
+            if (a < 60) idc *= (1 + yld);
         } else {
             // リタイア後
             if (a >= pA) cash += pension;
             
-            // 運用資産が複利で成長
-            inv *= (1 + r);
-            if (a < 60) idc *= (1 + r);
+            // 投資資産の成長
+            inv *= (1 + yld);
+            if (a < 60) idc *= (1 + yld);
             
             let needed = totalCost;
             let totalCashAvailable = cash + idc;
@@ -306,23 +328,26 @@ function runCore(targetRA) {
                 cash = 0;
                 idc = 0;
                 
-                if (inv > 0) {
-                    // 運用資産を取り崩す（簡易的に一律5%の売却益課税とみなして安定化）
-                    let withdrawal = deficit / (1 - 0.20315 * 0.5); // 利益率を50%と仮定した安全な取り崩し
-                    taxIncurred = (withdrawal - deficit);
+                // 現金が尽きたため、運用資産を取り崩す
+                if (inv >= deficit) {
+                    let withdrawal = deficit / (1 - 0.20315 * 0.5); // 簡易売却益課税モデル
+                    taxIncurred = withdrawal - deficit;
                     inv -= withdrawal;
                 } else {
-                    cash -= deficit;
+                    // 運用資産でも足りない場合
+                    cash -= (deficit - inv);
+                    inv = 0;
                 }
             }
         }
         
-        let totalCashAndIdc = Math.max(0, cash) + Math.max(0, idc);
-        let tot = inv + totalCashAndIdc + (cash < 0 ? cash : 0);
+        let totalCashAndIdc = cash + idc;
+        let tot = inv + totalCashAndIdc;
         
         let isBankrupt = false;
         if (tot < 0) {
             isBankrupt = true;
+            isAlreadyBankrupt = true;
             if (bankruptedAge === 0) bankruptedAge = a;
             tot = 0;
             cash = 0;
@@ -330,21 +355,47 @@ function runCore(targetRA) {
             idc = 0;
         }
         
-        results.push({ a, tot, inv, cashAndIdc: totalCashAndIdc, totalCost, taxIncurred, isBankrupt });
+        results.push({ a, tot, inv, cashAndIdc: Math.max(0, totalCashAndIdc), totalCost, taxIncurred, isBankrupt });
     }
     return { bankruptedAge, results };
 }
 
+// UIの入力値を取得してパラメータオブジェクトを組み立てるヘルパー
+function getParamsFromUI() {
+    return {
+        cA: parseInt(el.cA.value),
+        tLife: parseInt(el.tLife.value),
+        rA: parseInt(el.rA.value),
+        inc: parseFloat(el.inc.value),
+        ivA: parseFloat(el.ivA.value),
+        csA: parseFloat(el.csA.value),
+        idcStart: parseFloat(el.idc.value),
+        yld: parseFloat(el.yld.value) / 100,
+        inf: parseFloat(el.inf.value) / 100,
+        cB6: parseFloat(el.cB6.value),
+        cA6: parseFloat(el.cA6.value),
+        hType: document.querySelector('input[name="hType"]:checked').value,
+        lBal: parseFloat(el.lBal.value),
+        lPay: parseFloat(el.lPay.value),
+        lRat: parseFloat(el.lRat.value) / 100,
+        rMon: parseFloat(el.rMon.value),
+        pen: parseFloat(el.pen.value),
+        pA: parseInt(el.pA.value)
+    };
+}
+
 function calc() {
-    const rA = parseInt(el.rA.value), cA = parseInt(el.cA.value), tLife = parseInt(el.tLife.value);
-    const { bankruptedAge, results } = runCore(rA);
+    const params = getParamsFromUI();
+    const { bankruptedAge, results } = runCoreEngine(params);
+    const { tLife, cA } = params;
     
+    // テーブル描画
     tb.innerHTML = "";
     results.forEach(d => {
         const tr = document.createElement('tr');
         if(d.isBankrupt) tr.style.background = '#fef2f2';
         tr.innerHTML = `
-            <td style="text-align:center; font-weight:bold;">${d.a === rA ? d.a + '歳 🚀' : d.a + '歳'}</td>
+            <td style="text-align:center; font-weight:bold;">${d.a === params.rA ? d.a + '歳 🚀' : d.a + '歳'}</td>
             <td style="font-weight:bold; color:var(--primary);">${fmt(d.tot)}</td>
             <td>${fmt(d.inv)}</td>
             <td>${fmt(d.cashAndIdc)}</td>
@@ -354,6 +405,7 @@ function calc() {
         tb.appendChild(tr);
     });
     
+    // サマリーカードの更新
     const sumLifespan = document.getElementById('sum-lifespan');
     const cardLifespan = document.getElementById('card-lifespan');
     document.getElementById('lbl-lifespan').textContent = `${tLife}歳までの状態`;
@@ -377,12 +429,13 @@ function calc() {
 }
 
 function reverseCalc() {
-    const cA = parseInt(el.cA.value);
-    const tLife = parseInt(el.tLife.value);
+    const params = getParamsFromUI();
+    const { cA, tLife } = params;
     let targetAge = -1;
 
     for (let checkRA = cA; checkRA <= 70; checkRA++) {
-        const { bankruptedAge } = runCore(checkRA);
+        let testParams = { ...params, rA: checkRA };
+        const { bankruptedAge } = runCoreEngine(testParams);
         if (bankruptedAge === 0 || bankruptedAge > tLife) {
             targetAge = checkRA;
             break;
@@ -396,16 +449,19 @@ function reverseCalc() {
     gRes.style.display = "block";
     if (targetAge === cA) {
         gRes.innerHTML = `🎉 今すぐリタイアしても${tLife}歳まで資産が持ちます！`;
+        gRes.className = "alert-box alert-info";
         sumReverse.textContent = `${cA}歳 (今すぐ可)`;
         cardReverse.className = "summary-card success";
     } else if (targetAge > cA && targetAge <= 70) {
         gRes.innerHTML = `🎯 ${tLife}歳まで資産を切らさないためには、**【最低 ${targetAge}歳】**まで働く必要があります。`;
+        gRes.className = "alert-box alert-info";
         sumReverse.textContent = `${targetAge}歳`;
         cardReverse.className = "summary-card";
         el.rA.value = targetAge;
         numEl.rA.value = targetAge;
     } else {
-        gRes.innerHTML = `⚠️ 70歳まで働いても${tLife}歳までに資産が枯渇する試算となります。`;
+        gRes.innerHTML = `⚠️ 70歳まで働いても${tLife}歳までに資産が枯渇する試算となります。支出や利回りの見直しが必要です。`;
+        gRes.className = "alert-box alert-warn";
         sumReverse.textContent = "70歳超え困難";
         cardReverse.className = "summary-card alert";
     }
@@ -420,6 +476,7 @@ function triggerCalc() {
     calc();
 }
 
+// イベント登録
 document.getElementById('calcBtn').addEventListener('click', calc);
 document.getElementById('backBtn').addEventListener('click', reverseCalc);
 document.getElementsByName('hType').forEach(r => r.addEventListener('change', () => { toggleHousing(); calc(); }));
@@ -431,4 +488,3 @@ window.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
-
