@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>窓際FIREシミュレーター</title>
+    <title>次世代本格FIREシミュレーター</title>
     <style>
         :root {
             --primary: #2563eb;
@@ -152,8 +151,8 @@ const CONFIG = [
     {id:'idc', name:'現在のiDeCo残高', min:0, max:3000, step:50, val:300, m:true, help:'60歳までロックされる積立金（万円）'},
     {id:'yld', name:'運用利回り (実質)', min:0, max:15, step:0.1, val:4.0, p:true, help:'インフレ調整後の期待運用リターン（%）'},
     {id:'inf', name:'インフレ率', min:0, max:10, step:0.1, val:2.0, p:true, help:'物価上昇による生活費・家賃への影響（%）'},
-    {id:'cB6', name:'60歳前の年間生活費 (住居除く)', min:100, max:1000, step:10, val:300, m:true, help:'住居費を除いた年間ベース支出（万円）'},
-    {id:'cA6', name:'60歳以降の年間生活費 (住居除く)', min:100, max:1000, step:10, val:200, m:true, help:'リタイア後・高齢期の生活費（万円）'},
+    {id:'cB6', name:'60歳前の年間生活費 (住居除く)', min:100, max:1000, step:10, val:500, m:true, help:'住居費を除いた年間ベース支出（万円）'},
+    {id:'cA6', name:'60歳以降の年間生活費 (住居除く)', min:100, max:1000, step:10, val:400, m:true, help:'リタイア後・高齢期の生活費（万円）'},
     {id:'lBal', name:'住宅ローン残高', min:0, max:8000, step:100, val:3000, m:true, g:'loan', help:'現在の住宅ローン借入残高（万円）'},
     {id:'lPay', name:'住宅ローンの年間返済額', min:0, max:400, step:5, val:120, m:true, g:'loan', help:'年間で返済する総額（万円）'},
     {id:'lRat', name:'住宅ローン金利', min:0, max:5, step:0.05, val:0.5, p:true, g:'loan', help:'ローン適用金利（%）'},
@@ -466,4 +465,3 @@ window.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
-
