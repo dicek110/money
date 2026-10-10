@@ -49,7 +49,6 @@
         .alert-info { background: #eff6ff; border: 2px solid #bfdbfe; color: #1e40af; }
         .alert-warn { background: #fef2f2; border: 2px solid #fecaca; color: #991b1b; }
 
-        /* スマホ対応：テーブルの横スクロールと崩れ防止 */
         .table-container { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; max-height: 450px; }
         table { width: 100%; border-collapse: collapse; text-align: right; font-size: 0.8rem; white-space: nowrap; }
         th, td { padding: 8px 10px; border-bottom: 1px solid var(--border); } 
@@ -80,12 +79,12 @@
             <div class="summary-value" id="sum-lifespan">---</div>
         </div>
         <div class="summary-card" id="card-reverse">
-            <div class="summary-title" id="lbl-reverse">逆算：必要最低リタイア年齢</div>
-            <div class="summary-value" id="sum-reverse">---</div>
+            <div class="summary-title">逆算の推奨リタイア年齢</div>
+            <div class="summary-value" id="sum-reverse">未実行 (ボタン押下)</div>
         </div>
         <div class="summary-card">
-            <div class="summary-title">90歳時点の総資産</div>
-            <div class="summary-value" id="sum-90">---</div>
+            <div class="summary-title" id="lbl-target-asset">90歳時点の総資産</div>
+            <div class="summary-value" id="sum-target-asset">---</div>
         </div>
         <div class="summary-card">
             <div class="summary-title">100歳時点の総資産</div>
@@ -145,11 +144,11 @@
 const CONFIG = [
     {id:'cA', name:'現在の年齢', min:20, max:65, val:35, u:'歳', help:'シミュレーションを開始する年齢'},
     {id:'tLife', name:'目標寿命', min:70, max:100, step:1, val:90, u:'歳', help:'資産を枯渇させずに生き抜きたい目標の年齢'},
-    {id:'rA', name:'リタイア年齢', min:25, max:70, val:50, u:'歳', help:'労働を完全に辞めてFIRE生活に入る年齢'},
-    {id:'inc', name:'現在の年収 (額面)', min:200, max:2000, step:50, val:600, m:true, help:'現役時代の税引前年収（万円）'},
-    {id:'ivA', name:'運用資産 (現時点)', min:0, max:20000, step:100, val:2000, m:true, help:'株・投資信託などの時価総額（万円）'},
+    {id:'rA', name:'リタイア年齢', min:25, max:70, val:51, u:'歳', help:'労働を完全に辞めてFIRE生活に入る年齢'},
+    {id:'inc', name:'現在の年収 (額面)', min:200, max:2000, step:50, val:1100, m:true, help:'現役時代の税引前年収（万円）'},
+    {id:'ivA', name:'運用資産 (現時点)', min:0, max:20000, step:100, val:10600, m:true, help:'株・投資信託などの時価総額（万円）'},
     {id:'csA', name:'現金保有 (現時点)', min:0, max:10000, step:100, val:1000, m:true, help:'預貯金などの手元資金（万円）'},
-    {id:'idc', name:'現在のiDeCo残高', min:0, max:3000, step:50, val:300, m:true, help:'60歳までロックされる老舗積立金（万円）'},
+    {id:'idc', name:'現在のiDeCo残高', min:0, max:3000, step:50, val:300, m:true, help:'60歳までロックされる積立金（万円）'},
     {id:'yld', name:'運用利回り (実質)', min:0, max:15, step:0.1, val:4.0, p:true, help:'インフレ調整後の期待運用リターン（%）'},
     {id:'inf', name:'インフレ率', min:0, max:10, step:0.1, val:2.0, p:true, help:'物価上昇による生活費・家賃への影響（%）'},
     {id:'cB6', name:'60歳前の年間生活費 (住居除く)', min:100, max:1000, step:10, val:300, m:true, help:'住居費を除いた年間ベース支出（万円）'},
@@ -163,11 +162,10 @@ const CONFIG = [
 ];
 
 const QAS = [
-    {q:"Q1. 資産枯渇と赤字判定の仕組みは？", a:"各年の収支計算後、必要な支払いができなかった場合は「資金ショート」として正確に検知し、マイナス残高を隠さずに評価します。"},
-    {q:"Q2. iDeCoや年金の扱いは？", a:"60歳到達時にiDeCoは全額が現金枠へ合算され、公的年金は受給開始年齢から自動加算されます。受給額は繰り上げ・繰り下げを簡易反映しています。"}
+    {q:"Q1. 現在の設定と逆算結果の違いは？", a:"「リタイア年齢」はご自身で設定した現在の検証値です。「逆算の推奨リタイア年齢」は目標寿命までに破綻しないために必要な最短の年齢を示します。"},
+    {q:"Q2. 目標寿命以降の資産はどうなる？", a:"目標寿命（例: 90歳）でクリアしていても、100歳に向けて資産を使い切る場合は100歳時点で0円に近づくことがあります。"}
 ];
 
-// UIの構築
 const inpCont = document.getElementById('inputs-container');
 CONFIG.forEach(c => {
     inpCont.innerHTML += `
@@ -193,7 +191,6 @@ CONFIG.forEach(c => {
     numEl[c.id] = document.getElementById(c.id + '_num');
 });
 
-// 入力値の範囲バリデーション・同期処理
 CONFIG.forEach(c => {
     el[c.id].addEventListener('input', () => { 
         numEl[c.id].value = el[c.id].value; 
@@ -235,19 +232,14 @@ function fmt(n) {
     return `${Math.round(n).toLocaleString()}万円`;
 }
 
-/**
- * 【計算エンジン：完全独立型純粋関数】
- * UIの状態から入力パラメータを受け取り、純粋にシミュレーション結果の配列と破綻年齢を返す
- */
 function runCoreEngine(params) {
-    const { cA, tLife, rA, inc, ivA, csA, idcStart, yld, inf, cB6, cA6, hType, lBal, lPay, lRat, rMon, pen, pA } = params;
+    const { cA, rA, inc, ivA, csA, idcStart, yld, inf, cB6, cA6, hType, lBal, lPay, lRat, rMon, pen, pA } = params;
     
     let inv = ivA;
     let cash = csA;
     let idc = idcStart;
     let currLoan = lBal;
     
-    // 年金受給額の調整（65歳基準 ± 毎月0.4%~0.7%）
     let pR = 1.0;
     if(pA < 65) pR -= (65 - pA) * 12 * 0.004;
     else if(pA > 65) pR += (pA - 65) * 12 * 0.007;
@@ -260,13 +252,11 @@ function runCoreEngine(params) {
     for (let a = cA; a <= 100; a++) {
         let taxIncurred = 0;
         
-        // 1. 60歳到達時のiDeCo合流
         if (a === 60) {
             cash += idc;
             idc = 0;
         }
         
-        // 2. 基礎生活費と住居費のインフレ換算
         let yearsPassed = a - cA;
         let baseCost = ((a < 60) ? cB6 : cA6) * Math.pow(1 + inf, yearsPassed);
         let hCost = 0;
@@ -284,15 +274,12 @@ function runCoreEngine(params) {
         let totalCost = baseCost + hCost;
         
         if (isAlreadyBankrupt) {
-            // 一度破綻した後の処理
             results.push({ a, tot: 0, inv: 0, cashAndIdc: 0, totalCost, taxIncurred: 0, isBankrupt: true });
             continue;
         }
         
-        // 3. 現役時代 vs リタイア後 の収支処理
         if (a < rA) {
-            // 現役時代
-            let tax = inc * 0.2; // 簡易税金モデル
+            let tax = inc * 0.2;
             taxIncurred = tax;
             let netIncome = inc - tax;
             let netCashFlow = netIncome - totalCost;
@@ -300,16 +287,13 @@ function runCoreEngine(params) {
             if (netCashFlow >= 0) {
                 inv = (inv + netCashFlow) * (1 + yld);
             } else {
-                // 赤字の場合、現金から補填し、残りは投資の複利運用
                 cash += netCashFlow;
                 inv = inv * (1 + yld);
             }
             if (a < 60) idc *= (1 + yld);
         } else {
-            // リタイア後
             if (a >= pA) cash += pension;
             
-            // 投資資産の成長
             inv *= (1 + yld);
             if (a < 60) idc *= (1 + yld);
             
@@ -328,13 +312,11 @@ function runCoreEngine(params) {
                 cash = 0;
                 idc = 0;
                 
-                // 現金が尽きたため、運用資産を取り崩す
                 if (inv >= deficit) {
-                    let withdrawal = deficit / (1 - 0.20315 * 0.5); // 簡易売却益課税モデル
+                    let withdrawal = deficit / (1 - 0.20315 * 0.5);
                     taxIncurred = withdrawal - deficit;
                     inv -= withdrawal;
                 } else {
-                    // 運用資産でも足りない場合
                     cash -= (deficit - inv);
                     inv = 0;
                 }
@@ -360,7 +342,6 @@ function runCoreEngine(params) {
     return { bankruptedAge, results };
 }
 
-// UIの入力値を取得してパラメータオブジェクトを組み立てるヘルパー
 function getParamsFromUI() {
     return {
         cA: parseInt(el.cA.value),
@@ -389,7 +370,6 @@ function calc() {
     const { bankruptedAge, results } = runCoreEngine(params);
     const { tLife, cA } = params;
     
-    // テーブル描画
     tb.innerHTML = "";
     results.forEach(d => {
         const tr = document.createElement('tr');
@@ -405,10 +385,9 @@ function calc() {
         tb.appendChild(tr);
     });
     
-    // サマリーカードの更新
     const sumLifespan = document.getElementById('sum-lifespan');
     const cardLifespan = document.getElementById('card-lifespan');
-    document.getElementById('lbl-lifespan').textContent = `${tLife}歳までの状態`;
+    document.getElementById('lbl-lifespan').textContent = `${tLife}歳までの状態（現在の設定）`;
 
     if (bankruptedAge > 0 && bankruptedAge <= tLife) {
         sumLifespan.textContent = `${bankruptedAge}歳で枯渇 (目標未達)`;
@@ -418,13 +397,14 @@ function calc() {
         cardLifespan.className = "summary-card success";
     }
     
+    document.getElementById('lbl-target-asset').textContent = `${tLife}歳時点の総資産`;
     const getAssetAt = (age) => {
         const found = results.find(x => x.a === age);
         if (!found) return "対象外";
         return found.a < cA ? "開始前" : fmt(found.tot);
     };
     
-    document.getElementById('sum-90').textContent = getAssetAt(90);
+    document.getElementById('sum-target-asset').textContent = getAssetAt(tLife);
     document.getElementById('sum-100').textContent = getAssetAt(100);
 }
 
@@ -448,17 +428,15 @@ function reverseCalc() {
     
     gRes.style.display = "block";
     if (targetAge === cA) {
-        gRes.innerHTML = `🎉 今すぐリタイアしても${tLife}歳まで資産が持ちます！`;
+        gRes.innerHTML = `🎉 現在の設定でも${tLife}歳まで資産が十分に持ちます！`;
         gRes.className = "alert-box alert-info";
         sumReverse.textContent = `${cA}歳 (今すぐ可)`;
         cardReverse.className = "summary-card success";
     } else if (targetAge > cA && targetAge <= 70) {
-        gRes.innerHTML = `🎯 ${tLife}歳まで資産を切らさないためには、**【最低 ${targetAge}歳】**まで働く必要があります。`;
+        gRes.innerHTML = `🎯 ${tLife}歳まで資産を切らさないための逆算結果：**【最低 ${targetAge}歳】**まで働く必要があります。（※現在の設定は${params.rA}歳）`;
         gRes.className = "alert-box alert-info";
-        sumReverse.textContent = `${targetAge}歳`;
+        sumReverse.textContent = `${targetAge}歳 (推奨)`;
         cardReverse.className = "summary-card";
-        el.rA.value = targetAge;
-        numEl.rA.value = targetAge;
     } else {
         gRes.innerHTML = `⚠️ 70歳まで働いても${tLife}歳までに資産が枯渇する試算となります。支出や利回りの見直しが必要です。`;
         gRes.className = "alert-box alert-warn";
@@ -476,7 +454,6 @@ function triggerCalc() {
     calc();
 }
 
-// イベント登録
 document.getElementById('calcBtn').addEventListener('click', calc);
 document.getElementById('backBtn').addEventListener('click', reverseCalc);
 document.getElementsByName('hType').forEach(r => r.addEventListener('change', () => { toggleHousing(); calc(); }));
