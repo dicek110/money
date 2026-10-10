@@ -1,5 +1,4 @@
-目標寿命の設定項目を追加し、必要労働年数の逆算がその「目標寿命」に連動して計算されるようにアップデートした、完全版のHTML/JSコードです。
-設定項目に「目標寿命」のスライダー＆数値入力が追加され、逆算ボタンを押すと「指定した目標寿命まで資産を枯渇させずに生き残るための最短リタイア年齢」が自動計算されるようになります。
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -166,8 +165,8 @@ const CONFIG = [
 ];
 
 const QAS = [
-    {q:"Q1. 目標寿命と資産枯渇判定について", a:"設定した「目標寿命」の年齢に達するまでに資金ショート（赤字）が発生しないかを厳評価しています。表自体は100歳まで表示され、目標寿命時点での達成状況を上部カードで確認できます。"},
-    {q:"Q2. 売却時の税金（キャピタルゲイン課税）の計算は？", a:"運用資産の『時価』と『累計投資元本』を別々に追跡しています。取り崩し時には生活費とそれに伴う売却益税金を計算し、利益部分に対して一律20.315%の課税を行っています。"},
+    {q:"Q1. 目標寿命と資産枯渇判定について", a:"設定した「目標寿命」の年齢に達するまでに資金ショート（赤字）が発生しないかを評価しています。表自体は100歳まで表示され、目標寿命時点での達成状況を上部カードで確認できます。"},
+    {q:"Q2. 売却時の税金（キャピタルゲイン課税）の計算は？", a:"運用資産の『時価』と『累計投資元本』を別々に追跡しています。現金が不足して運用資産を取り崩す際、不足額に対する利益部分に対して一律20.315%の課税を行っています。"},
     {q:"Q3. 現役時代の積立ロジックは？", a:"額面年収から一律20%（税金・社会保険料の簡易モデル）を引いた手取りから生活費を差し引き、黒字分を運用資産の元本と時価に同時に積み増します。"},
     {q:"Q4. 住宅ローンと賃貸の計算の違いは？", a:"【ローンあり】金利を考慮して毎年残高を減らし、完済後は住居費負担がゼロになります。\n【賃貸】家賃がインフレ率に応じて毎年上昇し続けます。"},
     {q:"Q5. iDeCoと年金の連動について", a:"iDeCoは60歳に達した瞬間に全額が現金・預金枠へ自動合算されます。公的年金は受給開始年齢から毎年収入にプラスされ、繰り上げ・繰り下げによる増減率も自動反映されます。"}
@@ -304,36 +303,46 @@ function runCore(targetRA) {
             // リタイア後：年金収入加算 ＆ 運用資産からの取り崩し
             if (a >= pA) cash += pension;
             
-            let needed = totalCost;
-            if (inv > 0) {
-                // 含み益の割合を計算
-                let profitRatio = Math.max(0, (inv - totalPrincipal) / inv);
-                
-                // 生活費を取り崩す際の利益に対する税金と総額を計算
-                let taxOnProfit = needed * profitRatio * 0.20315;
-                let totalWithdrawal = needed + taxOnProfit;
-                
-                if (totalWithdrawal <= inv) {
-                    taxIncurred = taxOnProfit;
-                    let withdrawnPrincipal = needed * (1 - profitRatio);
-                    inv -= totalWithdrawal;
-                    totalPrincipal = Math.max(0, totalPrincipal - withdrawnPrincipal);
-                } else {
-                    // 運用資産が足りず、全額売却する場合
-                    let profitOnAll = inv * profitRatio * 0.20315;
-                    taxIncurred = profitOnAll;
-                    let netFromInv = inv - profitOnAll;
-                    let remainingNeeded = needed - netFromInv;
-                    
-                    totalPrincipal = 0;
-                    inv = 0;
-                    cash -= remainingNeeded;
-                }
-            } else {
-                cash -= needed;
-            }
-            if (inv > 0) inv *= (1 + r);
+            // 運用資産を先に利回りで増やす
+            inv *= (1 + r);
             if (a < 60) idc *= (1 + r);
+            
+            let needed = totalCost;
+            let totalCashAvailable = cash + idc;
+            
+            if (totalCashAvailable >= needed) {
+                // 現金だけで生活費が賄える場合
+                cash -= needed;
+            } else {
+                // 現金が不足し、運用資産を売却する場合
+                let deficit = needed - totalCashAvailable;
+                cash = 0;
+                idc = 0;
+                
+                if (inv > 0) {
+                    let profitRatio = Math.max(0, (inv - totalPrincipal) / inv);
+                    let taxOnProfit = deficit * profitRatio * 0.20315;
+                    let totalWithdrawal = deficit + taxOnProfit;
+                    
+                    if (totalWithdrawal <= inv) {
+                        taxIncurred = taxOnProfit;
+                        let withdrawnPrincipal = deficit * (1 - profitRatio);
+                        inv -= totalWithdrawal;
+                        totalPrincipal = Math.max(0, totalPrincipal - withdrawnPrincipal);
+                    } else {
+                        let profitOnAll = inv * profitRatio * 0.20315;
+                        taxIncurred = profitOnAll;
+                        let netFromInv = inv - profitOnAll;
+                        let remainingNeeded = deficit - netFromInv;
+                        
+                        totalPrincipal = 0;
+                        inv = 0;
+                        cash -= remainingNeeded;
+                    }
+                } else {
+                    cash -= deficit;
+                }
+            }
         }
         
         // 現金とiDeCoの合算総額
@@ -406,7 +415,6 @@ function reverseCalc() {
 
     for (let checkRA = cA; checkRA <= 70; checkRA++) {
         const { bankruptedAge } = runCore(checkRA);
-        // 目標寿命（tLife）を迎えるまでに破綻しなければOK
         if (bankruptedAge === 0 || bankruptedAge > tLife) {
             targetAge = checkRA;
             break;
