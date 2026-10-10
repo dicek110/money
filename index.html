@@ -1,9 +1,11 @@
+目標寿命の設定項目を追加し、必要労働年数の逆算がその「目標寿命」に連動して計算されるようにアップデートした、完全版のHTML/JSコードです。
+設定項目に「目標寿命」のスライダー＆数値入力が追加され、逆算ボタンを押すと「指定した目標寿命まで資産を枯渇させずに生き残るための最短リタイア年齢」が自動計算されるようになります。
 <!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>テスト次世代本格FIREシミュレーター</title>
+    <title>次世代本格FIREシミュレーター</title>
     <style>
         :root {
             --primary: #2563eb;
@@ -77,11 +79,11 @@
     <!-- サマリーファースト表示エリア -->
     <div class="summary-grid">
         <div class="summary-card" id="card-lifespan">
-            <div class="summary-title">資産寿命 / 状態</div>
+            <div class="summary-title" id="lbl-lifespan">目標寿命までの状態</div>
             <div class="summary-value" id="sum-lifespan">---</div>
         </div>
         <div class="summary-card" id="card-reverse">
-            <div class="summary-title">逆算：必要最低リタイア年齢</div>
+            <div class="summary-title" id="lbl-reverse">逆算：必要最低リタイア年齢</div>
             <div class="summary-value" id="sum-reverse">---</div>
         </div>
         <div class="summary-card">
@@ -112,7 +114,7 @@
 
         <div class="btn-group">
             <button id="calcBtn" class="btn btn-primary">結果を再計算する</button>
-            <button id="backBtn" class="btn btn-success">必要労働年数を逆算</button>
+            <button id="backBtn" class="btn btn-success">目標寿命に合わせた年齢を逆算</button>
         </div>
 
         <div id="gRes" class="alert-box alert-info"></div>
@@ -145,6 +147,7 @@
 <script>
 const CONFIG = [
     {id:'cA', name:'現在の年齢', min:20, max:65, val:35, u:'歳', help:'シミュレーションを開始する年齢'},
+    {id:'tLife', name:'目標寿命', min:70, max:100, step:1, val:90, u:'歳', help:'資産を枯渇させずに生き抜きたい目標の年齢'},
     {id:'rA', name:'リタイア年齢', min:25, max:70, val:50, u:'歳', help:'労働を完全に辞めてFIRE生活に入る年齢'},
     {id:'inc', name:'現在の年収 (額面)', min:200, max:2000, step:50, val:600, m:true, help:'現役時代の税引前年収'},
     {id:'ivA', name:'運用資産 (現時点)', min:0, max:20000, step:100, val:2000, m:true, help:'株・投資信託などの時価総額'},
@@ -163,11 +166,11 @@ const CONFIG = [
 ];
 
 const QAS = [
-    {q:"Q1. 資産枯渇判定のタイミングは？", a:"その年の給与・生活費・運用益・税金の計算がすべて終わった「年末時点」の総資産で判定しています。途中で資金がマイナスになった場合は隠さず「資金ショート」として検知します。"},
-    {q:"Q2. 売却時の税金（キャピタルゲイン課税）の計算は？", a:"運用資産の『時価』と『累計投資元本』を別々に追跡しています。取り崩し時には生活費とそれに伴う売却益税金を安全に計算し、利益部分に対して一律20.315%の課税を行っています。"},
+    {q:"Q1. 目標寿命と資産枯渇判定について", a:"設定した「目標寿命」の年齢に達するまでに資金ショート（赤字）が発生しないかを厳評価しています。表自体は100歳まで表示され、目標寿命時点での達成状況を上部カードで確認できます。"},
+    {q:"Q2. 売却時の税金（キャピタルゲイン課税）の計算は？", a:"運用資産の『時価』と『累計投資元本』を別々に追跡しています。取り崩し時には生活費とそれに伴う売却益税金を計算し、利益部分に対して一律20.315%の課税を行っています。"},
     {q:"Q3. 現役時代の積立ロジックは？", a:"額面年収から一律20%（税金・社会保険料の簡易モデル）を引いた手取りから生活費を差し引き、黒字分を運用資産の元本と時価に同時に積み増します。"},
     {q:"Q4. 住宅ローンと賃貸の計算の違いは？", a:"【ローンあり】金利を考慮して毎年残高を減らし、完済後は住居費負担がゼロになります。\n【賃貸】家賃がインフレ率に応じて毎年上昇し続けます。"},
-    {q:"Q5. iDeCoと年金の連動について", a:"iDeCoは60歳に達した瞬間に全額が現金・預金枠へ自動合算されます。公的年金は受給開始年齢から毎年収入にプラスされ、繰り上げ・繰り下げによる増減率（月±0.4%〜0.7%）も自動反映されます。"}
+    {q:"Q5. iDeCoと年金の連動について", a:"iDeCoは60歳に達した瞬間に全額が現金・預金枠へ自動合算されます。公的年金は受給開始年齢から毎年収入にプラスされ、繰り上げ・繰り下げによる増減率も自動反映されます。"}
 ];
 
 // DOM生成と双方向バインディングの構築
@@ -306,7 +309,7 @@ function runCore(targetRA) {
                 // 含み益の割合を計算
                 let profitRatio = Math.max(0, (inv - totalPrincipal) / inv);
                 
-                // 生活費を取り崩す際の利益に対する税金と総額を計算（修正済み）
+                // 生活費を取り崩す際の利益に対する税金と総額を計算
                 let taxOnProfit = needed * profitRatio * 0.20315;
                 let totalWithdrawal = needed + taxOnProfit;
                 
@@ -354,7 +357,7 @@ function runCore(targetRA) {
 }
 
 function calc() {
-    const rA = parseInt(el.rA.value), cA = parseInt(el.cA.value);
+    const rA = parseInt(el.rA.value), cA = parseInt(el.cA.value), tLife = parseInt(el.tLife.value);
     const { bankruptedAge, results } = runCore(rA);
     
     // テーブル描画
@@ -373,14 +376,16 @@ function calc() {
         tb.appendChild(tr);
     });
     
-    // サマリーカードの更新
+    // サマリーカードの更新（目標寿命ベースの判定）
     const sumLifespan = document.getElementById('sum-lifespan');
     const cardLifespan = document.getElementById('card-lifespan');
-    if (bankruptedAge > 0) {
-        sumLifespan.textContent = `${bankruptedAge}歳で枯渇`;
+    document.getElementById('lbl-lifespan').textContent = `${tLife}歳までの状態`;
+
+    if (bankruptedAge > 0 && bankruptedAge <= tLife) {
+        sumLifespan.textContent = `${bankruptedAge}歳で枯渇 (目標未達)`;
         cardLifespan.className = "summary-card alert";
     } else {
-        sumLifespan.textContent = "100歳クリア 🎉";
+        sumLifespan.textContent = `${tLife}歳クリア 🎉`;
         cardLifespan.className = "summary-card success";
     }
     
@@ -396,9 +401,13 @@ function calc() {
 
 function reverseCalc() {
     const cA = parseInt(el.cA.value);
+    const tLife = parseInt(el.tLife.value);
     let targetAge = -1;
+
     for (let checkRA = cA; checkRA <= 70; checkRA++) {
-        if (runCore(checkRA).bankruptedAge === 0) {
+        const { bankruptedAge } = runCore(checkRA);
+        // 目標寿命（tLife）を迎えるまでに破綻しなければOK
+        if (bankruptedAge === 0 || bankruptedAge > tLife) {
             targetAge = checkRA;
             break;
         }
@@ -410,17 +419,17 @@ function reverseCalc() {
     
     gRes.style.display = "block";
     if (targetAge === cA) {
-        gRes.innerHTML = "🎉 今すぐリタイアしても100歳まで資産が持ちます！";
+        gRes.innerHTML = `🎉 今すぐリタイアしても${tLife}歳まで資産が持ちます！`;
         sumReverse.textContent = `${cA}歳 (今すぐ可)`;
         cardReverse.className = "summary-card success";
-    } else if (targetAge > cA) {
-        gRes.innerHTML = `🎯 100歳まで資産を切らさないためには、**【最低 ${targetAge}歳】**まで働く必要があります。`;
+    } else if (targetAge > cA && targetAge <= 70) {
+        gRes.innerHTML = `🎯 ${tLife}歳まで資産を切らさないためには、**【最低 ${targetAge}歳】**まで働く必要があります。`;
         sumReverse.textContent = `${targetAge}歳`;
         cardReverse.className = "summary-card";
         el.rA.value = targetAge;
         numEl.rA.value = targetAge;
     } else {
-        gRes.innerHTML = "⚠️ 70歳まで働いても100歳までに資産が枯渇する試算となります。支出や利回りの見直しが必要です。";
+        gRes.innerHTML = `⚠️ 70歳まで働いても${tLife}歳までに資産が枯渇する試算となります。支出や利回りの見直し、または目標寿命の調整が必要です。`;
         sumReverse.textContent = "70歳超え困難";
         cardReverse.className = "summary-card alert";
     }
@@ -448,3 +457,4 @@ window.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
